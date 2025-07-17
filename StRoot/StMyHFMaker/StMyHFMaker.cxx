@@ -98,7 +98,7 @@ Int_t StMyHFMaker::Make()
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
     TVector3 pVer = picoEvent->primaryVertex();
-    return (pVer.z() < EventCuts::vZ_max && pVer > EventCuts::vZ_min) &&
+    return (pVer.z() < EventCuts::vZ_max && pVer.z() > EventCuts::vZ_min) &&
             (fabs(pVer.z() - picoEvent->vzVpd()) < EventCuts::vZVpdvZ) &&
             !((fabs(pVer.x()) < EventCuts::vError) &&
               (fabs(pVer.y()) < EventCuts::vError) &&
