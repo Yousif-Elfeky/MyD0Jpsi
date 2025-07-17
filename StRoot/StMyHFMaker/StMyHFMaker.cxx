@@ -106,7 +106,13 @@ bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
             sqrt(TMath::Power(pVer.x(), 2) + TMath::Power(pVer.y(), 2)) <=  EventCuts::vR;
 }
 //______________________________________________________________
-bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{}
+bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
+  for (auto trg : EventCuts::triggers)
+  {
+    if (picoEvent->isTrigger(trg)) return true;
+    else return false;
+  }
+}
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{}
 //______________________________________________________________
