@@ -66,6 +66,8 @@ class StMyHFMaker : public StMaker
         TNtuple* mJPSI;
         // Histograms Here.
         TH1D* hNevent;
+        // Things
+        int  mRunId;
         
 ClassDef(StMyHFMaker, 1)
 };

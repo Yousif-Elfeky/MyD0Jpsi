@@ -57,6 +57,7 @@ Int_t StMyHFMaker::Init()
 {
   mOutFileBaseName = mOutFileBaseName.ReplaceAll(".root", "");
   oFile = new TFile(mOutFileBaseName+".root", "RECREATE");
+  
   initHistograms();
   initNTuples();
   
@@ -64,18 +65,40 @@ Int_t StMyHFMaker::Init()
 }
 //______________________________________________________________
 Int_t StMyHFMaker::Finish(){
+   
     oFile->cd();
-    /*Write Histograms/NTuples*/
+
+    // Write Histograms/NTuples
     writeHistograms();
+    
     oFile->Close();
+    
     deleteHistograms();
+
     return kStOK;
 }
 
 //______________________________________________________________
 Int_t StMyHFMaker::Make()
 {
-
+    if (!mPicoDstMaker)
+    {
+    LOG_WARN << "No PicoDstMaker! Skip! " << endm;
+    return kStWarn;
+    }
+    StPicoDst const* picoDst = mPicoDstMaker->picoDst();
+    if (!picoDst)
+    {
+    LOG_WARN << "No PicoDst! Skip! " << endm;
+    return kStWarn;
+    }
+    
+    StPicoEvent const * picoEvent = picoDst->event();
+    
+    mRunId = picoEvent->runId();
+    hNevent->Fill(mRunId);
+    
+    if(!isGoodEvent(picoEvent))return;
 
     return kStOK;
 }
