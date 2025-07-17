@@ -9,6 +9,7 @@
 **************************************************
 */
 #include "TChain.h"
+#include "TH1.h"
 #include "TString.h"
 #include "StMaker.h"
 
@@ -35,7 +36,9 @@ class StMyHFMaker : public StMaker
     private:
         StMyHFMaker(){}
         void initHistograms();
+        void writeHistograms();
         void initNTuples();
+        // void writeNTuples();
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
         bool isGoodTrack(StPicoTrack const* trk)const;
@@ -53,14 +56,16 @@ class StMyHFMaker : public StMaker
         string mRunNumList;
         vector<int> mBadRun;
         bool DEBUG;
-        // Put Histograms and NTuples Here.
+        // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
         TNtuple* mElectron;
         TNtuple* mPositron;
         TNtuple* mD0;
         TNtuple* mJPSI;
-
+        // Histograms Here.
+        TH1D* hNevent;
+        
 ClassDef(StMyHFMaker, 1)
 };
 

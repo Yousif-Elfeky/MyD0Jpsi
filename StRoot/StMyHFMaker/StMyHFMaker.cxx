@@ -66,6 +66,7 @@ Int_t StMyHFMaker::Init()
 Int_t StMyHFMaker::Finish(){
     oFile->cd();
     /*Write Histograms/NTuples*/
+    writeHistograms();
     oFile->Close();
     return kStOK;
 }
@@ -116,6 +117,12 @@ bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
 //______________________________________________________________
 bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
 //______________________________________________________________
-void StMyHFMaker::initHistograms(){}
+void StMyHFMaker::initHistograms(){
+    hNevent = new TH1D("hNevnet","hNevnet",1000,0,1000);
+}
 //______________________________________________________________
 void StMyHFMaker::initNTuples(){}
+//______________________________________________________________
+void StMyHFMaker::writeHistograms(){
+    hNevent->Write();
+}
