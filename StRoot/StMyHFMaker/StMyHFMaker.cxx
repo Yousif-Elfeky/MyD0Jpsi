@@ -96,7 +96,7 @@ Int_t StMyHFMaker::Make()
     StPicoEvent const * picoEvent = picoDst->event();
     
     mRunId = picoEvent->runId();
-    hNevent->Fill(mRunId);
+    hNevent->Fill(runnum[mRunId]);
     
     if(!isGoodEvent(picoEvent))return kStOK;
 
