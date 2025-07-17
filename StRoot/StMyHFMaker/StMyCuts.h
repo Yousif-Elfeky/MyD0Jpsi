@@ -8,7 +8,7 @@ namespace EventCuts{
     const int vZVpdvZ = 2; //|TPC_vZ - VPD_Vz|(cm)
     const int vR = 2; //cm
     const float vError = 1.0e-5; //cm
-    std::array<unsigned int, 3> const triggers = {1,2,3}; //PlaceHolder
+    std::array<unsigned int, 3> const triggers = {1,2,3}; //PlaceHolder Triggers
 }//EventCuts
 namespace TrackCuts{
     const int gPt = 1; // Global pT > 1

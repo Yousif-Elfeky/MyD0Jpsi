@@ -90,7 +90,7 @@ bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
               (fabs(pVer.y()) < EventCuts::vError) &&
               (fabs(pVer.z()) < EventCuts::vError))&&
             sqrt(TMath::Power(pVer.x(), 2) + TMath::Power(pVer.y(), 2)) <=  EventCuts::vR;
-}
+}//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
   for (auto trg : EventCuts::triggers)
@@ -98,7 +98,7 @@ bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
     if (picoEvent->isTrigger(trg)) return true;
     else return false;
   }
-}
+}//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
     return ((trk->gPt() > TrackCuts::gPt)&&
@@ -108,7 +108,7 @@ bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
             (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
                 TrackCuts::nHitsFit2Dedx)
         );
-}
+}//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
 //______________________________________________________________

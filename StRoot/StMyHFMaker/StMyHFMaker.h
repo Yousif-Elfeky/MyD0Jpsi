@@ -30,6 +30,7 @@ class StMyHFMaker : public StMaker
         virtual Int_t Make();
         virtual Int_t Finish();
         void getBadruns(string inputFileName);
+        void setDebug(bool d){DEBUG = d;}
     
     private:
         StMyHFMaker(){}
@@ -51,7 +52,7 @@ class StMyHFMaker : public StMaker
         std::map<int,int> runnum;
         string mRunNumList;
         vector<int> mBadRun;
-
+        bool DEBUG;
         // Put Histograms and NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
