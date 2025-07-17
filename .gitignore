@@ -2,3 +2,4 @@ RefCode/
 .*/
 .*
 !/.gitignore
+*.root
