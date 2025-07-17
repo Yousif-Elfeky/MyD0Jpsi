@@ -20,8 +20,8 @@
 #include "TVector3.h"
 
 #include "StEvent/StDcaGeometry.h"
-#include "StPhysicalHelixD.hh"
-#include "phys_constants.h"
+#include "StPhysicalHelixD.hh" 
+// #include "phys_constants.h" // commented for now
 #include "StPicoEvent/StPicoBTofPidTraits.h"
 #include "StPicoEvent/StPicoETofPidTraits.h"
 #include "StBTofUtil/tofPathLength.hh"
@@ -78,23 +78,6 @@ Int_t StMyHFMaker::Make()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
     TVector3 pVer = picoEvent->primaryVertex();
@@ -114,7 +97,15 @@ bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
   }
 }
 //______________________________________________________________
-bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{}
+bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
+    return ((trk->gPt() > TrackCuts::gPt)&&
+            ((trk->gMom().Eta()) < TrackCuts::Eta)&&
+            (trk->nHitsFit() > TrackCuts::nHitsFit)&&
+            (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
+            (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
+                TrackCuts::nHitsFit2Dedx)
+        );
+}
 //______________________________________________________________
 bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
 //______________________________________________________________
