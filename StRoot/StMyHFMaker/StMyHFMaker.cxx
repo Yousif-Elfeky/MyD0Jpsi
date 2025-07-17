@@ -38,6 +38,7 @@
 
 
 ClassImp(StMyHFMaker)
+//______________________________________________________________
 //Constructor
 StMyHFMaker::StMyHFMaker(
                 const char* name,TString const inputFilesList,
@@ -46,10 +47,12 @@ StMyHFMaker::StMyHFMaker(
                 mInputFilesList(inputFilesList), 
                 mOutFileBaseName(outBaseName)
             {}
+//______________________________________________________________
 //Destructor
 StMyHFMaker::~StMyHFMaker()
 {}
 
+//______________________________________________________________
 Int_t StMyHFMaker::Init()
 {
   mOutFileBaseName = mOutFileBaseName.ReplaceAll(".root", "");
@@ -59,12 +62,14 @@ Int_t StMyHFMaker::Init()
   
   return kStOK;
 }
+//______________________________________________________________
 Int_t StMyHFMaker::Finish(){
     oFile->cd();
     /*Write Histograms/NTuples*/
     oFile->Close();
 }
 
+//______________________________________________________________
 Int_t StMyHFMaker::Make()
 {
 
@@ -90,11 +95,19 @@ Int_t StMyHFMaker::Make()
 
 
 
+//______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{}
+//______________________________________________________________
 bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{}
+//______________________________________________________________
 bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{}
+//______________________________________________________________
 bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
+//______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
+//______________________________________________________________
 bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
+//______________________________________________________________
 void StMyHFMaker::initHistograms(){}
+//______________________________________________________________
 void StMyHFMaker::initNTuples(){}
