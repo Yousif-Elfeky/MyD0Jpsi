@@ -142,7 +142,25 @@ bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
 bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
 //______________________________________________________________
 void StMyHFMaker::initHistograms(){
-    hNevent = new TH1D("hNevnet","hNevnet",1000,0,1000);
+    
+    ifstream readnum;
+    readnum.open(mRunNumList);
+
+    if (!readnum.is_open()) {cout << "Error: Could not open run number list file: " << mRunNumList << endl;return; }
+
+    int totalNum = 0; 
+    int tmpRunNum; 
+    int index = 0; 
+
+    while (readnum >> tmpRunNum) {
+        runnum.insert(pair<int, int>(tmpRunNum, index));
+        if (DEBUG) cout << "Read run number: " << tmpRunNum << " -> assigned id: " << index << endl;
+        index++;
+    }
+    readnum.close();
+    totalNum = runnum.size();
+
+    hNevent = new TH1D("hNevnet","hNevnet",totalNum,0,totalNum);
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){

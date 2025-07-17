@@ -30,6 +30,7 @@ class StMyHFMaker : public StMaker
         virtual Int_t Init();
         virtual Int_t Make();
         virtual Int_t Finish();
+        void setRunNumList(string list){mRunNumList = list;}
         void getBadruns(string inputFileName);
         void setDebug(bool d){DEBUG = d;}
     

@@ -1,7 +1,7 @@
 #include <string>
 #include <fstream>
 void load();
-void runStMyHFMaker(TString picolist="input.list" , TString outFileName="test")
+void runStMyHFMaker(TString picolist="input.list" , std::string  runlist="run.list",TString outFileName="test")
 {
   TStopwatch*   stopWatch = new TStopwatch();
   stopWatch->Start();
@@ -16,6 +16,7 @@ void runStMyHFMaker(TString picolist="input.list" , TString outFileName="test")
   chain = new StChain();
   StPicoDstMaker* picoDstMaker = new StPicoDstMaker(2, picolist, "picoDstMaker");
   StMyHFMaker*  picoHFMaker = new StMyHFMaker("picoHFMaker",picolist , outFileName.Data(), picoDstMaker);
+  picoHFMaker->setRunNumList(runlist);
   picoHFMaker->getBadruns("StRoot/macros/badRun.list");
   picoHFMaker->setDebug(true);
   // -------------- USER variables -------------------------
