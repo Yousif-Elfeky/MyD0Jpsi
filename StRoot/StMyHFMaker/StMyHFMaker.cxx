@@ -44,7 +44,7 @@ StMyHFMaker::StMyHFMaker(
                 TString const outBaseName, StPicoDstMaker* picoDstMaker):
                 StMaker(name), mPicoDstMaker(picoDstMaker),
                 mInputFilesList(inputFilesList), 
-                mOutFileBaseName(outFileBaseName)
+                mOutFileBaseName(outBaseName)
             {}
 //Destructor
 StMyHFMaker::~StMyHFMaker()
@@ -60,7 +60,7 @@ Int_t StMyHFMaker::Init()
   return kStOK;
 }
 Int_t StMyHFMaker::Finish(){
-    oFile->Open();
+    oFile->cd();
     /*Write Histograms/NTuples*/
     oFile->Close();
 }

@@ -48,6 +48,10 @@ class StMyHFMaker : public StMaker
         TString mInputFilesList;
         TString mOutFileBaseName;
         TFile* oFile;
+        std::map<int,int> runnum;
+        string mRunNumList;
+        vector<int> mBadRun;
+
         // Put Histograms and NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
