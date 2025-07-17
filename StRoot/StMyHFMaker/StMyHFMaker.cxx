@@ -39,7 +39,7 @@
 
 ClassImp(StMyHFMaker)
 //______________________________________________________________
-//Constructor
+//  Constructor
 StMyHFMaker::StMyHFMaker(
                 const char* name,TString const inputFilesList,
                 TString const outBaseName, StPicoDstMaker* picoDstMaker):
@@ -48,7 +48,7 @@ StMyHFMaker::StMyHFMaker(
                 mOutFileBaseName(outBaseName)
             {}
 //______________________________________________________________
-//Destructor
+// Destructor
 StMyHFMaker::~StMyHFMaker()
 {}
 
@@ -96,7 +96,15 @@ Int_t StMyHFMaker::Make()
 
 
 //______________________________________________________________
-bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{}
+bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
+    TVector3 pVer = picoEvent->primaryVertex();
+    return (pVer.z() < EventCuts::vZ_max && pVer > EventCuts::vZ_min) &&
+            (fabs(pVer.z() - picoEvent->vzVpd()) < EventCuts::vZVpdvZ) &&
+            !((fabs(pVer.x()) < EventCuts::vError) &&
+              (fabs(pVer.y()) < EventCuts::vError) &&
+              (fabs(pVer.z()) < EventCuts::vError))&&
+            sqrt(TMath::Power(pVer.x(), 2) + TMath::Power(pVer.y(), 2)) <=  EventCuts::vR;
+}
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{}
 //______________________________________________________________

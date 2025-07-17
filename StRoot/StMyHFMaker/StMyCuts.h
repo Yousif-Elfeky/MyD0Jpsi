@@ -3,7 +3,11 @@
 #include "Rtypes.h"
 
 namespace EventCuts{
-
+    int vZ_min = -30; //cm
+    int vZ_max = 30; //cm
+    int vZVpdvZ = 2; //|TPC_vZ - VPD_Vz|(cm)
+    int vR = 2;//cm
+    float vError = 1.0e-5; //cm
 }//EventCuts
 namespace D0_Cuts{
 
