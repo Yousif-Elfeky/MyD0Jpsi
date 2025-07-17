@@ -89,7 +89,7 @@ bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
             !((fabs(pVer.x()) < EventCuts::vError) &&
               (fabs(pVer.y()) < EventCuts::vError) &&
               (fabs(pVer.z()) < EventCuts::vError))&&
-            sqrt(TMath::Power(pVer.x(), 2) + TMath::Power(pVer.y(), 2)) <=  EventCuts::vR;
+            (sqrt(TMath::Power(pVer.x(),2) + TMath::Power(pVer.y(),2))<=EventCuts::vR);
 }//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
