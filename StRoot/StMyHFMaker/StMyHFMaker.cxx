@@ -68,6 +68,7 @@ Int_t StMyHFMaker::Finish(){
     /*Write Histograms/NTuples*/
     writeHistograms();
     oFile->Close();
+    deleteHistograms();
     return kStOK;
 }
 
@@ -121,8 +122,12 @@ void StMyHFMaker::initHistograms(){
     hNevent = new TH1D("hNevnet","hNevnet",1000,0,1000);
 }
 //______________________________________________________________
-void StMyHFMaker::initNTuples(){}
-//______________________________________________________________
 void StMyHFMaker::writeHistograms(){
     hNevent->Write();
 }
+//______________________________________________________________
+void StMyHFMaker::deleteHistograms(){
+    delete hNevent;
+}
+//______________________________________________________________
+void StMyHFMaker::initNTuples(){}

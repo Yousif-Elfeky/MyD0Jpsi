@@ -37,6 +37,7 @@ class StMyHFMaker : public StMaker
         StMyHFMaker(){}
         void initHistograms();
         void writeHistograms();
+        void deleteHistograms();
         void initNTuples();
         // void writeNTuples();
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
