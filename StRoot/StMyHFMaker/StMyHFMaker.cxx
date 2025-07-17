@@ -67,12 +67,15 @@ Int_t StMyHFMaker::Finish(){
     oFile->cd();
     /*Write Histograms/NTuples*/
     oFile->Close();
+    return kStOK;
 }
 
 //______________________________________________________________
 Int_t StMyHFMaker::Make()
 {
 
+
+    return kStOK;
 }
 
 
