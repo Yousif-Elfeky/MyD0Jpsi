@@ -59,6 +59,10 @@ class StMyHFMaker : public StMaker
         string mRunNumList;
         vector<int> mBadRun;
         bool DEBUG;
+        //Physics
+        TVector3 TPCVer;
+        float_t VPDvz;
+        float_t Vr;
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
