@@ -146,11 +146,15 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{
 }
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk)const{
-  return std::abs(trk->nSigmaPion()) < D0_Cuts::nSigmaPion; //for now
+  float beta = getTofBeta(trk);
+  return std::abs(trk->nSigmaPion()) < D0_Cuts::nSigmaPion&&
+        ((1/(beta-1))<D0_Cuts::oneOverBetaPion); //for now
 }
 //______________________________________________________________
 bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{
-  return std::abs(trk->nSigmaKaon()) < D0_Cuts::nSigmaKaon; //for now
+  float beta = getTofBeta(trk);
+  return std::abs(trk->nSigmaKaon()) < D0_Cuts::nSigmaKaon&&
+          ((1/(beta-1))<D0_Cuts::oneOverBetaKaon); //for now
 }
 //______________________________________________________________
 void StMyHFMaker::pairElectrons(StPicoTrack const* trk){
