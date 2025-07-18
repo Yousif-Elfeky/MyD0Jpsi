@@ -3,9 +3,9 @@
 #include "Rtypes.h"
 
 namespace EventCuts{
-    const int vZ_min = -30; //cm
-    const int vZ_max = 30; //cm
-    const int vZVpdvZ = 2; //|TPC_vZ - VPD_Vz|(cm)
+    const int vZ_min = -100; //cm
+    const int vZ_max = 100; //cm
+    const int vZVpdvZ = 6; //|TPC_vZ - VPD_Vz|(cm)
     const int vR = 2; //cm
     const float vError = 1.0e-5; //cm
     std::array<unsigned int, 3> const triggers = {1,2,3}; //PlaceHolder Triggers
