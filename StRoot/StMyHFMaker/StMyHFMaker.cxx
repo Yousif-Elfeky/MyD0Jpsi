@@ -66,41 +66,46 @@ Int_t StMyHFMaker::Init()
 //______________________________________________________________
 Int_t StMyHFMaker::Finish(){
    
-    oFile->cd();
+  oFile->cd();
 
-    // Write Histograms/NTuples
-    writeHistograms();
-    
-    oFile->Close();
-    
-    deleteHistograms();
+  // Write Histograms/NTuples
+  writeHistograms();
+  
+  oFile->Close();
+  
+  deleteHistograms();
 
-    return kStOK;
+  return kStOK;
 }
 
 //______________________________________________________________
 Int_t StMyHFMaker::Make()
 {
-    if (!mPicoDstMaker)
-    {
-    LOG_WARN << "No PicoDstMaker! Skip! " << endm;
-    return kStWarn;
-    }
-    StPicoDst const* picoDst = mPicoDstMaker->picoDst();
-    if (!picoDst)
-    {
-    LOG_WARN << "No PicoDst! Skip! " << endm;
-    return kStWarn;
-    }
-    
-    StPicoEvent const * picoEvent = picoDst->event();
-    
-    mRunId = picoEvent->runId();
-    hNevent->Fill(runnum[mRunId]);
-    
-    if(!isGoodEvent(picoEvent))return kStOK;
+  if (!mPicoDstMaker)
+  {
+  LOG_WARN << "No PicoDstMaker! Skip! " << endm;
+  return kStWarn;
+  }
+  StPicoDst const* picoDst = mPicoDstMaker->picoDst();
+  if (!picoDst)
+  {
+  LOG_WARN << "No PicoDst! Skip! " << endm;
+  return kStWarn;
+  }
+  
+  StPicoEvent const * picoEvent = picoDst->event();
+  
+  mRunId = picoEvent->runId();
+  hNevent->Fill(runnum[mRunId]);
+  
+  if(!isGoodEvent(picoEvent))return kStOK;
+  
+  TVector3 TPCVer = picoEvent->primaryVertex();hVzTPC->Fill(TPCVer.z());
+  float VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
+  float Vr = std::sqrt(pow(TPCVer.x(),2)+pow(TPCVer.y(),2)+pow(TPCVer.z(),2));
+  hVr->Fill(Vr);
 
-    return kStOK;
+  return kStOK;
 }
 
 
@@ -108,13 +113,13 @@ Int_t StMyHFMaker::Make()
 
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
-    TVector3 pVer = picoEvent->primaryVertex();
-    return (pVer.z() < EventCuts::vZ_max && pVer.z() > EventCuts::vZ_min) &&
-            (fabs(pVer.z() - picoEvent->vzVpd()) < EventCuts::vZVpdvZ) &&
-            !((fabs(pVer.x()) < EventCuts::vError) &&
-              (fabs(pVer.y()) < EventCuts::vError) &&
-              (fabs(pVer.z()) < EventCuts::vError))&&
-            (sqrt(TMath::Power(pVer.x(),2) + TMath::Power(pVer.y(),2))<=EventCuts::vR);
+  TVector3 pVer = picoEvent->primaryVertex();
+  return (pVer.z() < EventCuts::vZ_max && pVer.z() > EventCuts::vZ_min) &&
+          (fabs(pVer.z() - picoEvent->vzVpd()) < EventCuts::vZVpdvZ) &&
+          !((fabs(pVer.x()) < EventCuts::vError) &&
+            (fabs(pVer.y()) < EventCuts::vError) &&
+            (fabs(pVer.z()) < EventCuts::vError))&&
+          (sqrt(TMath::Power(pVer.x(),2) + TMath::Power(pVer.y(),2))<=EventCuts::vR);
 }//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
@@ -126,13 +131,13 @@ bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
 }//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
-    return ((trk->gPt() > TrackCuts::gPt)&&
-            ((trk->gMom().Eta()) < TrackCuts::Eta)&&
-            (trk->nHitsFit() > TrackCuts::nHitsFit)&&
-            (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
-            (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
-                TrackCuts::nHitsFit2Dedx)
-        );
+  return ((trk->gPt() > TrackCuts::gPt)&&
+          ((trk->gMom().Eta()) < TrackCuts::Eta)&&
+          (trk->nHitsFit() > TrackCuts::nHitsFit)&&
+          (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
+          (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
+              TrackCuts::nHitsFit2Dedx)
+      );
 }//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
@@ -142,33 +147,46 @@ bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
 bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
 //______________________________________________________________
 void StMyHFMaker::initHistograms(){
-    
-    ifstream readnum;
-    readnum.open(mRunNumList);
+  
+  int nRuns = getTotalNRuns();
 
-    if (!readnum.is_open()) {cout << "Error: Could not open run number list file: " << mRunNumList << endl;return; }
-
-    int totalNum = 0; 
-    int tmpRunNum; 
-    int index = 0; 
-
-    while (readnum >> tmpRunNum) {
-        runnum.insert(pair<int, int>(tmpRunNum, index));
-        if (DEBUG) cout << "Read run number: " << tmpRunNum << " -> assigned id: " << index << endl;
-        index++;
-    }
-    readnum.close();
-    totalNum = runnum.size();
-
-    hNevent = new TH1D("hNevnet","hNevnet",totalNum,0,totalNum);
+  hNevent = new TH1D("hNevnet","hNevnet",nRuns,0,nRuns);
+  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,-200,200);
+  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,-200,200);
+  hVr = new TH1D("hVr","V_{r}",xBins,-5,5);
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){
-    hNevent->Write();
+  hNevent->Write();
+  hVzTPC->Write();
+  hVzVPD->Write();
+  hVr->Write();
 }
 //______________________________________________________________
 void StMyHFMaker::deleteHistograms(){
-    delete hNevent;
+  delete hNevent;
+  delete hVzTPC;
+  delete hVzVPD;
+  delete hVr;
 }
 //______________________________________________________________
 void StMyHFMaker::initNTuples(){}
+//______________________________________________________________
+int StMyHFMaker::getTotalNRuns(){
+    
+  ifstream readnum;
+  readnum.open(mRunNumList);
+
+  if (!readnum.is_open()) {cout << "Error: Could not open run number list file: " << mRunNumList << endl;return; }
+  int tmpRunNum; 
+  int index = 0; 
+
+  while (readnum >> tmpRunNum) {
+    runnum.insert(pair<int, int>(tmpRunNum, index));
+    if (DEBUG) cout << "Read run number: " << tmpRunNum << " -> assigned id: " << index << endl;
+    index++;
+  }
+  readnum.close();
+
+  return runnum.size();
+}

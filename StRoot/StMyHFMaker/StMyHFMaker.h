@@ -40,6 +40,7 @@ class StMyHFMaker : public StMaker
         void writeHistograms();
         void deleteHistograms();
         void initNTuples();
+        int getTotalNRuns();
         // void writeNTuples();
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
@@ -66,7 +67,12 @@ class StMyHFMaker : public StMaker
         TNtuple* mD0;
         TNtuple* mJPSI;
         // Histograms Here.
+        int xBins = 10000;
+        int yBins = 10000;
         TH1D* hNevent;
+        TH1D* hVzTPC;
+        TH1D* hVzVPD;
+        TH1D* hVr;
         // Things
         int  mRunId;
         
