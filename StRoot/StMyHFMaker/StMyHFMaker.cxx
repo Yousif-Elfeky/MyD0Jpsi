@@ -115,7 +115,7 @@ Int_t StMyHFMaker::Make()
     tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
     for(int p =1; p<2; p++)
     {
-      if(!isElectron)continue;
+      if(!isElectron(trk))continue;
       hNsigmaElectron->Fill(trk->nSigmaElectron());
     }
   }
