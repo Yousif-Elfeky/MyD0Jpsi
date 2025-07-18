@@ -55,7 +55,10 @@ class StMyHFMaker : public StMaker
         void initNTuples();
         // void writeNTuples();
         void pairElectrons(StPicoTrack const* trk);
-        void makeJPSI(vector<Particle> electron,vector<Particle> positron);
+        void pairPions(StPicoTrack const* trk);
+        void pairKaons(StPicoTrack const* trk);
+        void makeJPSI();
+        void makeD0();
         int getTotalNRuns();
         double getTofBeta(StPicoTrack const* const trk) const;
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
@@ -83,7 +86,9 @@ class StMyHFMaker : public StMaker
         Double_t beta;
         bool tofmatch;
         TVector3 mom;
-        float M_electron=0.000511;//GeV
+        float M_ELECTRON=0.000511;//GeV
+        float M_PION=0.139570;//GeV
+        float M_KAON=0.493677;//GeV
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
@@ -103,11 +108,19 @@ class StMyHFMaker : public StMaker
         TH1D* hMee_ULike;
         TH1D* hMee_Like1;
         TH1D* hMee_Like2;
+        TH1D* hMpik_ULike1;
+        TH1D* hMpik_ULike2;
+        TH1D* hMpik_Like1;
+        TH1D* hMpik_Like2;
         // Things
         int  mRunId;
         Particle particleinfo;
         vector<Particle> electroninfo;
         vector<Particle> positroninfo;
+        vector<Particle> pionplusinfo;
+        vector<Particle> pionminusinfo;
+        vector<Particle> kaonplusinfo;
+        vector<Particle> kaonminusinfo;
 
 
 ClassDef(StMyHFMaker, 1)

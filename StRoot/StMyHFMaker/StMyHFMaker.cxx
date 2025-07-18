@@ -124,8 +124,11 @@ Int_t StMyHFMaker::Make()
       hNsigmaElectron->Fill(trk->nSigmaElectron());
       pairElectrons(trk);
     }
+    if(isPion(trk))pairPions(trk);
+    if(isKaon(trk))pairKaons(trk);
   }
-  makeJPSI(electroninfo,positroninfo);
+  makeJPSI();
+  makeD0();
 
   return kStOK;
 }
@@ -141,109 +144,130 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{
   return isTOFElectron + isTPCElectron;
 }
 //______________________________________________________________
+bool StMyHFMaker::isPion(StPicoTrack const* trk)const{
+  return std::abs(trk->nSigmaPion()) < D0_Cuts::nSigmaPion; //for now
+}
+//______________________________________________________________
+bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{
+  return std::abs(trk->nSigmaKaon()) < D0_Cuts::nSigmaKaon; //for now
+}
+//______________________________________________________________
 void StMyHFMaker::pairElectrons(StPicoTrack const* trk){
-  if(trk->charge()<0){
-    particleinfo.charge = trk->charge();
-    particleinfo.px = mom.Px();
-    particleinfo.py = mom.Py();
-    particleinfo.pz = mom.Pz();
-    particleinfo.Energy = sqrt(pow(M_electron,2.0)+pow(mom.Mag(),2.0));
-    particleinfo.Eta = mom.Eta();
-    particleinfo.Phi = mom.Phi();
-    particleinfo.Pt = mom.Perp();
-    electroninfo.push_back(particleinfo);
-  }else if(trk->charge()>0){
-    particleinfo.charge = trk->charge();
-    particleinfo.px = mom.Px();
-    particleinfo.py = mom.Py();
-    particleinfo.pz = mom.Pz();
-    particleinfo.Energy = sqrt(pow(M_electron,2.0)+pow(mom.Mag(),2.0));
-    particleinfo.Eta = mom.Eta();
-    particleinfo.Phi = mom.Phi();
-    particleinfo.Pt = mom.Perp();
-    positroninfo.push_back(particleinfo);
-  }
+  particleinfo.charge = trk->charge();
+  particleinfo.px = mom.Px();
+  particleinfo.py = mom.Py();
+  particleinfo.pz = mom.Pz();
+  particleinfo.Energy = sqrt(pow(M_ELECTRON,2.0)+pow(mom.Mag(),2.0));
+  particleinfo.Eta = mom.Eta();
+  particleinfo.Phi = mom.Phi();
+  particleinfo.Pt = mom.Perp();
+  if(trk->charge()<0) electroninfo.push_back(particleinfo);
+  else if(trk->charge()>0) positroninfo.push_back(particleinfo);
 }
 //______________________________________________________________
-void StMyHFMaker::makeJPSI(vector<Particle> electron,vector<Particle> positron){
-  uint electron_idx = 0; uint positron_idx = 0;
-  uint nElectron = electron.size(); uint nPositron = positron.size();
-  TLorentzVector pair(0,0,0,0);
-  TLorentzVector particle1_4V(0,0,0,0);
-  TLorentzVector particle2_4V(0,0,0,0);
-  //Like-Sign Background Positron Pairs.
-  for(electron_idx=0;electron_idx<nPositron;electron_idx++)
-  {
-    particle1_4V.SetPxPyPzE(
-      positron[electron_idx].px,
-      positron[electron_idx].py,
-      positron[electron_idx].pz,
-      positron[electron_idx].Energy
-    );
-    for(positron_idx=electron_idx+1;positron_idx<nPositron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      positron[positron_idx].px,
-      positron[positron_idx].py,
-      positron[positron_idx].pz,
-      positron[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_Like1->Fill(pair.M());
+void StMyHFMaker::pairPions(StPicoTrack const* trk){
+  particleinfo.charge = trk->charge();
+  particleinfo.px = mom.Px();
+  particleinfo.py = mom.Py();
+  particleinfo.pz = mom.Pz();
+  particleinfo.Energy = sqrt(pow(M_PION,2.0)+pow(mom.Mag(),2.0));
+  particleinfo.Eta = mom.Eta();
+  particleinfo.Phi = mom.Phi();
+  particleinfo.Pt = mom.Perp();
+
+  if(trk->charge()>0) pionplusinfo.push_back(particleinfo);
+  else if(trk->charge()<0) pionminusinfo.push_back(particleinfo);
+}
+//______________________________________________________________
+void StMyHFMaker::pairKaons(StPicoTrack const* trk){
+  particleinfo.charge = trk->charge();
+  particleinfo.px = mom.Px();
+  particleinfo.py = mom.Py();
+  particleinfo.pz = mom.Pz();
+  particleinfo.Energy = sqrt(pow(M_KAON,2.0)+pow(mom.Mag(),2.0));
+  particleinfo.Eta = mom.Eta();
+  particleinfo.Phi = mom.Phi();
+  particleinfo.Pt = mom.Perp();
+
+  if(trk->charge()>0) kaonplusinfo.push_back(particleinfo);
+  else if(trk->charge()<0) kaonminusinfo.push_back(particleinfo);
+}
+//______________________________________________________________
+void StMyHFMaker::makeJPSI(){
+
+  TLorentzVector pair_4v(0,0,0,0), p1_4v(0,0,0,0), p2_4v(0,0,0,0);
+
+  // 1. Unlike-Sign Signal Pairs (e+ e-)
+  for(const auto& electron : electroninfo) {
+    p1_4v.SetPxPyPzE(electron.px, electron.py, electron.pz, electron.Energy);
+    for(const auto& positron : positroninfo) {
+        p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
+        pair_4v = p1_4v + p2_4v;
+        hMee_ULike->Fill(pair_4v.M());
     }
   }
-  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
-  //Like-Sign Background Electron Pairs.
-  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
-  {
-    particle1_4V.SetPxPyPzE(
-      electron[electron_idx].px,
-      electron[electron_idx].py,
-      electron[electron_idx].pz,
-      electron[electron_idx].Energy
-    );
-    for(positron_idx=electron_idx+1;positron_idx<nElectron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      electron[positron_idx].px,
-      electron[positron_idx].py,
-      electron[positron_idx].pz,
-      electron[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_Like2->Fill(pair.M());
+
+  // 2. Like-Sign Background: Positron Pairs (e+ e+)
+  for(uint i = 0; i < positroninfo.size(); ++i) {
+    p1_4v.SetPxPyPzE(positroninfo[i].px, positroninfo[i].py, positroninfo[i].pz, positroninfo[i].Energy);
+    for(uint j = i + 1; j < positroninfo.size(); ++j) { 
+        p2_4v.SetPxPyPzE(positroninfo[j].px, positroninfo[j].py, positroninfo[j].pz, positroninfo[j].Energy);
+        pair_4v = p1_4v + p2_4v;
+        hMee_Like1->Fill(pair_4v.M());
     }
   }
-  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
-  //Unlike-Sign Signal Pairs.
-  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
-  {
-    particle1_4V.SetPxPyPzE(
-      electron[electron_idx].px,
-      electron[electron_idx].py,
-      electron[electron_idx].pz,
-      electron[electron_idx].Energy
-    );
-    for(positron_idx=0;positron_idx<nPositron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      positron[positron_idx].px,
-      positron[positron_idx].py,
-      positron[positron_idx].pz,
-      positron[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_ULike->Fill(pair.M());
+
+  // 3. Like-Sign Background: Electron Pairs (e- e-)
+  for(uint i = 0; i < electroninfo.size(); ++i) {
+    p1_4v.SetPxPyPzE(electroninfo[i].px, electroninfo[i].py, electroninfo[i].pz, electroninfo[i].Energy);
+    for(uint j = i + 1; j < electroninfo.size(); ++j) { 
+        p2_4v.SetPxPyPzE(electroninfo[j].px, electroninfo[j].py, electroninfo[j].pz, electroninfo[j].Energy);
+        pair_4v = p1_4v + p2_4v;
+        hMee_Like2->Fill(pair_4v.M());
     }
   }
 }
 //______________________________________________________________
-bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
-//______________________________________________________________
-bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
+void StMyHFMaker::makeD0(){
+  
+  TLorentzVector d0FourMom(0,0,0,0),kaon4V(0,0,0,0),pion4V(0,0,0,0);
+    // Unlike-Sign (K- pi+)
+    for(const auto& kaon : kaonminusinfo) {
+        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+        for(const auto& pion : pionplusinfo) {
+            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+            d0FourMom = kaon4V + pion4V;
+            hMpik_ULike1->Fill(d0FourMom.M());
+        }
+    }
+    // Unlike-Sign (K+ pi-)
+    for(const auto& kaon : kaonplusinfo) {
+        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+        for(const auto& pion : pionminusinfo) {
+            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+            d0FourMom = kaon4V + pion4V;
+            hMpik_ULike2->Fill(d0FourMom.M());
+        }
+    }
+    // Like-Sign (K+ pi+)
+    for(const auto& kaon : kaonplusinfo) {
+        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+        for(const auto& pion : pionplusinfo) {
+            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+            d0FourMom = kaon4V + pion4V;
+            hMpik_Like1->Fill(d0FourMom.M());
+        }
+    }
+    // Like-Sign (K- pi-)
+    for(const auto& kaon : kaonminusinfo) {
+        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+        for(const auto& pion : pionminusinfo) {
+            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+            d0FourMom = kaon4V + pion4V;
+            hMpik_Like2->Fill(d0FourMom.M());
+        }
+    }
+}
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
   TVector3 pVer = picoEvent->primaryVertex();
@@ -334,6 +358,10 @@ void StMyHFMaker::initHistograms(){
   hMee_ULike = new TH1D("hMee_ULike","e^{+} e^{-} + Background",xBins,0,4);
   hMee_Like1 = new TH1D("hMee_Like1","e^{+} e^{+}",xBins,0,4);
   hMee_Like2 = new TH1D("hMee_Like2","e^{-} e^{-}",xBins,0,4);
+  hMpik_ULike1 = new TH1D("hMpik_ULike1","K^{-} #pi^{+}",xBins,0,2);
+  hMpik_ULike2 = new TH1D("hMpik_ULike2","K^{+} #pi^{-}",xBins,0,2);
+  hMpik_Like1 = new TH1D("hMpik_Like1","K^{+} #pi^{+}",xBins,0,2);
+  hMpik_Like2 = new TH1D("hMpik_Like2","K^{-} #pi^{-}",xBins,0,2);
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){
@@ -345,6 +373,10 @@ void StMyHFMaker::writeHistograms(){
   hMee_ULike->Write();
   hMee_Like1->Write();
   hMee_Like2->Write();
+  hMpik_ULike1->Write();
+  hMpik_ULike2->Write();
+  hMpik_Like1->Write();
+  hMpik_Like2->Write();
 }
 //______________________________________________________________
 void StMyHFMaker::deleteHistograms(){
@@ -356,4 +388,8 @@ void StMyHFMaker::deleteHistograms(){
   delete hMee_ULike;
   delete hMee_Like1;
   delete hMee_Like2;
+  delete hMpik_ULike1;
+  delete hMpik_ULike2;
+  delete hMpik_Like1;
+  delete hMpik_Like2;
 }

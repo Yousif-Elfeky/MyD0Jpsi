@@ -16,9 +16,11 @@ namespace TrackCuts{
     const int nHitsDedx = 5; // nHitsDedx > 5
     const float nHitsFit2Dedx = 0.51; // ((nHitsFit)/(nHitsDedx)) >= 0.51
     const int DCA = 1; // DCA < 1
-    const int Eta = 1; // |η| < 1
+    const int Eta = 1.4; // |η| < 1
 }//TrackCuts
 namespace D0_Cuts{
+    int nSigmaPion = 2;
+    int nSigmaKaon = 2;
 
 }//D0_Cuts
 namespace JPSI_Cuts{
