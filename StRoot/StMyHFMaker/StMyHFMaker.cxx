@@ -236,7 +236,7 @@ void StMyHFMaker::makeJPSI(vector<Particle> electron,vector<Particle> positron){
     );
     pair=particle1_4V+particle2_4V;
     //Fill Histograms and trees here
-    hMee_Like2->Fill(pair.M());
+    hMee_ULike->Fill(pair.M());
     }
   }
 
