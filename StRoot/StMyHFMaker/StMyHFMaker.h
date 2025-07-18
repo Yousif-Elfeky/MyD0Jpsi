@@ -13,7 +13,6 @@
 #include "TString.h"
 #include "TVector3.h"
 #include "StMaker.h"
-#include <cmath>
 
 class TString;
 class TFile;
@@ -25,12 +24,12 @@ class StPicoEvent;
 
 struct Particle{
     Short_t charge;
-    float_t px;
-    float_t py;
-    float_t pz;
-    float_t Energy;
-    float_t Eta;
-    float_t Phi;
+    Float_t px;
+    Float_t py;
+    Float_t pz;
+    Float_t Energy;
+    Float_t Eta;
+    Float_t Phi;
 };
 
 class StMyHFMaker : public StMaker
@@ -75,10 +74,10 @@ class StMyHFMaker : public StMaker
         
         //Physics
         TVector3 TPCVer;
-        float VPDvz;
-        float Vr;
-        uint nTracks;
-        double beta;
+        Float_t VPDvz;
+        Float_t Vr;
+        UInt_t nTracks;
+        Double_t beta;
         bool tofmatch;
         bool isTPCElectron;
         bool isTOFElectron;
@@ -91,8 +90,8 @@ class StMyHFMaker : public StMaker
         TNtuple* mJPSI;
         
         // Histograms Here.
-        int xBins = 10000;
-        int yBins = 10000;
+        Int_t xBins = 10000;
+        Int_t yBins = 10000;
         TH1D* hNevent;
         TH1D* hVzTPC;
         TH1D* hVzVPD;
