@@ -17,10 +17,20 @@
 class TString;
 class TFile;
 class TNtuple;
+class TVector3;
 class StPicoTrack;
 class StPicoDstMaker;
 class StPicoEvent;
-class TVector3;
+
+struct Particle{
+    Short_t charge;
+    float_t px;
+    float_t py;
+    float_t pz;
+    float_t Energy;
+    float_t Eta;
+    float_t Phi;
+};
 
 class StMyHFMaker : public StMaker
 {
@@ -50,7 +60,7 @@ class StMyHFMaker : public StMaker
         bool isPion(StPicoTrack const* trk)const;
         bool isKaon(StPicoTrack const* trk)const;
         bool isElectron(StPicoTrack const* trk)const;
-        float getTofBeta(StPicoTrack const* const trk) const;
+        double getTofBeta(StPicoTrack const* const trk) const;
         bool isBadrun(Int_t runId);
         
         StPicoDstMaker* mPicoDstMaker;
@@ -66,7 +76,11 @@ class StMyHFMaker : public StMaker
         TVector3 TPCVer;
         float VPDvz;
         float Vr;
-
+        uint nTracks;
+        double beta;
+        bool tofmatch;
+        bool isTPCElectron;
+        bool isTOFElectron;
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;

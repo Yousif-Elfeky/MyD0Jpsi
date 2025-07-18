@@ -35,6 +35,9 @@
 #include "StMyCuts.h"
 #include "StMyHFMaker.h"
 
+#ifndef C_C_LIGHT
+#define C_C_LIGHT 299792458
+#endif // !C_C_LIGHT
 
 ClassImp(StMyHFMaker)
 //______________________________________________________________
@@ -103,12 +106,24 @@ Int_t StMyHFMaker::Make()
   VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
   Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
 
+  nTracks = picoDst->numberOfTracks();
+  // Track Loop
+  for (int itrack=0;itrack<nTracks;itrack++){
+    StPicoTrack* trk = picoDst->track(itrack);
+    if(!isGoodTrack(trk))continue;
+    beta = getTofBeta(trk);
+    tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
+    
+  }
+
   return kStOK;
 }
-
-
-
-
+//______________________________________________________________
+bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
+//______________________________________________________________
+bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
+//______________________________________________________________
+bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
   TVector3 pVer = picoEvent->primaryVertex();
@@ -137,12 +152,6 @@ bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
               TrackCuts::nHitsFit2Dedx)
       );
 }//Check StMyCuts.h
-//______________________________________________________________
-bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
-//______________________________________________________________
-bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
-//______________________________________________________________
-bool StMyHFMaker::isKaon(StPicoTrack const* trk)const{}
 //______________________________________________________________
 void StMyHFMaker::initHistograms(){
   
@@ -187,4 +196,30 @@ int StMyHFMaker::getTotalNRuns(){
   readnum.close();
 
   return runnum.size();
+}
+double StMyHFMaker::getTofBeta(StPicoTrack const* const trk) const
+{
+  int index2tof = trk->bTofPidTraitsIndex();
+  double beta = std::numeric_limits<float>::quiet_NaN();
+  if (index2tof >= 0)
+  {
+    StPicoBTofPidTraits const* const tofPid = mPicoDstMaker->picoDst()->btofPidTraits(index2tof);
+    if (tofPid)
+    {
+      beta = tofPid->btofBeta();
+      if (beta < 1e-4)
+      {
+        TVector3 const vtx3 = mPicoDstMaker->picoDst()->event()->primaryVertex();
+        StThreeVectorF vtx(vtx3.x(),vtx3.y(),vtx3.z());
+        TVector3 const btofHitPos3 = tofPid->btofHitPos();
+        StThreeVectorF btofHitPos(btofHitPos3.x(),btofHitPos3.y(),btofHitPos3.z());
+        StPicoPhysicalHelix helix = trk->helix(mPicoDstMaker->picoDst()->event()->bField());
+        float L = tofPathLength(&vtx, &btofHitPos, helix.curvature());
+        float tof = tofPid->btof();
+        if (tof > 0) beta = L / (tof * (C_C_LIGHT / 1.e9));
+        else beta = std::numeric_limits<float>::quiet_NaN();
+      }
+    }
+  } 
+  return beta;
 }

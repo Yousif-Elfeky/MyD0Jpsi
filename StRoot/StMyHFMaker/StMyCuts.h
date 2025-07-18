@@ -11,9 +11,9 @@ namespace EventCuts{
     std::array<unsigned int, 3> const triggers = {1,2,3}; //PlaceHolder Triggers
 }//EventCuts
 namespace TrackCuts{
-    const int gPt = 1; // Global pT > 1
-    const int nHitsFit = 1;  // nHitsFit > 1
-    const int nHitsDedx = 1; // nHitsDedx > 1
+    const float gPt = 0.2; // Global pT > 0.2
+    const int nHitsFit = 15;  // nHitsFit > 15
+    const int nHitsDedx = 5; // nHitsDedx > 5
     const float nHitsFit2Dedx = 0.51; // ((nHitsFit)/(nHitsDedx)) >= 0.51
     // const int Dca = 1; // DCA < 1
     const int Eta = 1; // |η| < 1
