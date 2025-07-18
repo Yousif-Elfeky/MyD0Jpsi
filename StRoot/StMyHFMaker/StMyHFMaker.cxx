@@ -17,7 +17,6 @@
 #include "TTree.h"
 #include "TNtuple.h"
 #include "TLorentzVector.h"
-#include "TVector3.h"
 
 #include "StEvent/StDcaGeometry.h"
 #include "StPhysicalHelixD.hh" 

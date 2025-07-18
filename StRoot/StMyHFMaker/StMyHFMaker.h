@@ -11,6 +11,7 @@
 #include "TChain.h"
 #include "TH1.h"
 #include "TString.h"
+#include "TVector3.h"
 #include "StMaker.h"
 
 class TString;
@@ -83,7 +84,7 @@ class StMyHFMaker : public StMaker
         TH1D* hVr;
         // Things
         int  mRunId;
-                
+
 ClassDef(StMyHFMaker, 1)
 };
 
