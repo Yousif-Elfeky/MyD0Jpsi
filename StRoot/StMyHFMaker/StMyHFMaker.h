@@ -19,6 +19,7 @@ class TNtuple;
 class StPicoTrack;
 class StPicoDstMaker;
 class StPicoEvent;
+class TVector3;
 
 class StMyHFMaker : public StMaker
 {
@@ -59,6 +60,12 @@ class StMyHFMaker : public StMaker
         string mRunNumList;
         vector<int> mBadRun;
         bool DEBUG;
+        
+        //Physics
+        TVector3 TPCVer;
+        float VPDvz;
+        float Vr;
+
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
@@ -66,6 +73,7 @@ class StMyHFMaker : public StMaker
         TNtuple* mPositron;
         TNtuple* mD0;
         TNtuple* mJPSI;
+        
         // Histograms Here.
         int xBins = 10000;
         int yBins = 10000;
@@ -75,13 +83,7 @@ class StMyHFMaker : public StMaker
         TH1D* hVr;
         // Things
         int  mRunId;
-    public:
-        //Physics
-        TVector3 TPCVer;
-        float_t VPDvz;
-        float_t Vr;
-
-        
+                
 ClassDef(StMyHFMaker, 1)
 };
 
