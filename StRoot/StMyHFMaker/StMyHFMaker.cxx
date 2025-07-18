@@ -115,7 +115,7 @@ Int_t StMyHFMaker::Make()
   for (int itrack=0;itrack<nTracks;itrack++){
     StPicoTrack* trk = picoDst->track(itrack);
     mom = trk->pMom();
-    if(!isGoodTrack(trk))continue;
+    if(!isGoodTrack(trk,trk->gDCA(TPCVer.x(),TPCVer.y(),TPCVer.z())))continue;
     
     beta = getTofBeta(trk);
     tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
@@ -239,8 +239,6 @@ void StMyHFMaker::makeJPSI(vector<Particle> electron,vector<Particle> positron){
     hMee_ULike->Fill(pair.M());
     }
   }
-
-
 }
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
@@ -265,13 +263,14 @@ bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
   }
 }//Check StMyCuts.h
 //______________________________________________________________
-bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
+bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk, float DCA)const{
   return ((trk->gPt() > TrackCuts::gPt)&&
           ((trk->gMom().Eta()) < TrackCuts::Eta)&&
           (trk->nHitsFit() > TrackCuts::nHitsFit)&&
           (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
           (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
-              TrackCuts::nHitsFit2Dedx)
+              TrackCuts::nHitsFit2Dedx) &&
+          (DCA <= TrackCuts::DCA)
       );
 }//Check StMyCuts.h
 //______________________________________________________________

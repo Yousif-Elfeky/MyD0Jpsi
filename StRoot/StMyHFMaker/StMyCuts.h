@@ -15,7 +15,7 @@ namespace TrackCuts{
     const int nHitsFit = 15;  // nHitsFit > 15
     const int nHitsDedx = 5; // nHitsDedx > 5
     const float nHitsFit2Dedx = 0.51; // ((nHitsFit)/(nHitsDedx)) >= 0.51
-    // const int Dca = 1; // DCA < 1
+    const int DCA = 1; // DCA < 1
     const int Eta = 1; // |η| < 1
 }//TrackCuts
 namespace D0_Cuts{

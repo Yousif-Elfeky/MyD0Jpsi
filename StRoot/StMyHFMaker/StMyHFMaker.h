@@ -60,7 +60,7 @@ class StMyHFMaker : public StMaker
         double getTofBeta(StPicoTrack const* const trk) const;
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
-        bool isGoodTrack(StPicoTrack const* trk)const;
+        bool isGoodTrack(StPicoTrack const* trk, float DCA)const;
         bool isPion(StPicoTrack const* trk)const;
         bool isKaon(StPicoTrack const* trk)const;
         bool isElectron(StPicoTrack const* trk)const;
