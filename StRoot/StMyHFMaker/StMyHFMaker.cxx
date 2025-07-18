@@ -102,7 +102,7 @@ Int_t StMyHFMaker::Make()
   
   TVector3 TPCVer = picoEvent->primaryVertex();hVzTPC->Fill(TPCVer.z());
   float VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
-  float Vr = std::sqrt(pow(TPCVer.x(),2)+pow(TPCVer.y(),2)+pow(TPCVer.z(),2));
+  float Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));
   hVr->Fill(Vr);
 
   return kStOK;
@@ -150,10 +150,10 @@ void StMyHFMaker::initHistograms(){
   
   int nRuns = getTotalNRuns();
 
-  hNevent = new TH1D("hNevnet","hNevnet",nRuns,0,nRuns);
-  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,-200,200);
-  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,-200,200);
-  hVr = new TH1D("hVr","V_{r}",xBins,-5,5);
+  hNevent = new TH1D("hNevnet","hNevnet",nRuns,0,nRuns);//TODO: Declare the limits of 
+  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,-200,200);//the histograms for better 
+  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,-200,200);//readability 
+  hVr = new TH1D("hVr","V_{r}",xBins,0,5);
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){
