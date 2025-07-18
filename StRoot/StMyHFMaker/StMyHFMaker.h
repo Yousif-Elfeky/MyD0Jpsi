@@ -13,6 +13,7 @@
 #include "TString.h"
 #include "TVector3.h"
 #include "StMaker.h"
+#include <cmath>
 
 class TString;
 class TFile;
