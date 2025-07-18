@@ -221,7 +221,7 @@ void StMyHFMaker::initHistograms(){
   hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//the histograms for better 
   hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//readability 
   hVr = new TH1D("hVr","V_{r}",xBins,0,EventCuts::vR+2);
-  hNsigmaElectron = new TH1D("hNsigmaElectron", "n^{#Sigma}_{e}",100,-5,5);
+  hNsigmaElectron = new TH1D("hNsigmaElectron", "n^{#sigma}_{e}",100,-5,5);
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){
