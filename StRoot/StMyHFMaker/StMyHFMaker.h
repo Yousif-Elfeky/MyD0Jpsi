@@ -30,6 +30,7 @@ struct Particle{
     Float_t Energy;
     Float_t Eta;
     Float_t Phi;
+    Float_t Pt;
 };
 
 class StMyHFMaker : public StMaker
@@ -52,15 +53,16 @@ class StMyHFMaker : public StMaker
         void writeHistograms();
         void deleteHistograms();
         void initNTuples();
-        int getTotalNRuns();
         // void writeNTuples();
+        void pairElectrons(StPicoTrack const* trk);
+        int getTotalNRuns();
+        double getTofBeta(StPicoTrack const* const trk) const;
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
         bool isGoodTrack(StPicoTrack const* trk)const;
         bool isPion(StPicoTrack const* trk)const;
         bool isKaon(StPicoTrack const* trk)const;
         bool isElectron(StPicoTrack const* trk)const;
-        double getTofBeta(StPicoTrack const* const trk) const;
         bool isBadrun(Int_t runId);
         
         StPicoDstMaker* mPicoDstMaker;
@@ -79,6 +81,8 @@ class StMyHFMaker : public StMaker
         UInt_t nTracks;
         Double_t beta;
         bool tofmatch;
+        TVector3 mom;
+        float M_electron=0.000511;//GeV
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
@@ -97,6 +101,10 @@ class StMyHFMaker : public StMaker
         TH1D* hNsigmaElectron;
         // Things
         int  mRunId;
+        Particle particleinfo;
+        vector<Particle> electroninfo;
+        vector<Particle> positroninfo;
+
 
 ClassDef(StMyHFMaker, 1)
 };

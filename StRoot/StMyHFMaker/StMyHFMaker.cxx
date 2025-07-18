@@ -94,9 +94,13 @@ Int_t StMyHFMaker::Make()
   LOG_WARN << "No PicoDst! Skip! " << endm;
   return kStWarn;
   }
+
   
   StPicoEvent const * picoEvent = picoDst->event();
   
+  electroninfo.clear();
+  positroninfo.clear();  
+
   mRunId = picoEvent->runId();
   hNevent->Fill(runnum[mRunId]);
   
@@ -110,13 +114,15 @@ Int_t StMyHFMaker::Make()
   // Track Loop
   for (int itrack=0;itrack<nTracks;itrack++){
     StPicoTrack* trk = picoDst->track(itrack);
+    mom = trk->pMom();
     if(!isGoodTrack(trk))continue;
+    
     beta = getTofBeta(trk);
     tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
-    for(int p =1; p<2; p++)
-    {
-      if(!isElectron(trk))continue;
+    
+    if(isElectron(trk)){
       hNsigmaElectron->Fill(trk->nSigmaElectron());
+      pairElectrons(trk);
     }
   }
 
@@ -132,6 +138,30 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{
                       trk->nSigmaElectron()>(3*trk->pMom().Mag()+JPSI_Cuts::nSigmaElectron_lowhmom);
   isTOFElectron = tofmatch?fabs(1./beta-1.)<JPSI_Cuts::oneOverBetaElectron:false;
   return isTOFElectron + isTPCElectron;
+}
+//______________________________________________________________
+void StMyHFMaker::pairElectrons(StPicoTrack const* trk){
+  if(trk->charge()<0){
+    particleinfo.charge = trk->charge();
+    particleinfo.px = mom.Px();
+    particleinfo.py = mom.Py();
+    particleinfo.pz = mom.Pz();
+    particleinfo.Energy = sqrt(pow(M_electron,2.0)+pow(mom.Mag(),2.0));
+    particleinfo.Eta = mom.Eta();
+    particleinfo.Phi = mom.Phi();
+    particleinfo.Pt = mom.Perp();
+    electroninfo.push_back(particleinfo);
+  }else if(trk->charge()>0){
+    particleinfo.charge = trk->charge();
+    particleinfo.px = mom.Px();
+    particleinfo.py = mom.Py();
+    particleinfo.pz = mom.Pz();
+    particleinfo.Energy = sqrt(pow(M_electron,2.0)+pow(mom.Mag(),2.0));
+    particleinfo.Eta = mom.Eta();
+    particleinfo.Phi = mom.Phi();
+    particleinfo.Pt = mom.Perp();
+    positroninfo.push_back(particleinfo);
+  }
 }
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
@@ -186,6 +216,7 @@ int StMyHFMaker::getTotalNRuns(){
 
   return runnum.size();
 }
+//______________________________________________________________
 double StMyHFMaker::getTofBeta(StPicoTrack const* const trk) const
 {
   int index2tof = trk->bTofPidTraitsIndex();
