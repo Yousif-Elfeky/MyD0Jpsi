@@ -177,7 +177,7 @@ int StMyHFMaker::getTotalNRuns(){
   ifstream readnum;
   readnum.open(mRunNumList);
 
-  if (!readnum.is_open()) {cout << "Error: Could not open run number list file: " << mRunNumList << endl;return; }
+  if (!readnum.is_open()) {cout << "Error: Could not open run number list file: " << mRunNumList << endl;return EXIT_FAILURE; }
   int tmpRunNum; 
   int index = 0; 
 
