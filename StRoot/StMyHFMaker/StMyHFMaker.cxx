@@ -112,7 +112,7 @@ Int_t StMyHFMaker::Make()
 
   nTracks = picoDst->numberOfTracks();
   // Track Loop
-  for (int itrack=0;itrack<nTracks;itrack++){
+  for (UInt_t itrack=0;itrack<nTracks;itrack++){
     StPicoTrack* trk = picoDst->track(itrack);
     mom = trk->pMom();
     if(!isGoodTrack(trk,trk->gDCA(TPCVer.x(),TPCVer.y(),TPCVer.z())))continue;
@@ -282,8 +282,7 @@ bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
 bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
   for (auto trg : EventCuts::triggers)
   {
-    if (picoEvent->isTrigger(trg)) return true;
-    else return false;
+    if (picoEvent->isTrigger(trg)) return true;  
   }
 }//Check StMyCuts.h
 //______________________________________________________________
