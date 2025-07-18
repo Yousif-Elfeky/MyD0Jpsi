@@ -113,13 +113,26 @@ Int_t StMyHFMaker::Make()
     if(!isGoodTrack(trk))continue;
     beta = getTofBeta(trk);
     tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
-    
+    for(int p =1; p<2; p++)
+    {
+      if(!isElectron)continue;
+      hNsigmaElectron->Fill(trk->nSigmaElectron());
+    }
   }
 
   return kStOK;
 }
 //______________________________________________________________
-bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{}
+bool StMyHFMaker::isElectron(StPicoTrack const* trk)const{
+  bool isTOFElectron = false; bool isTPCElectron = false;
+  if(trk->pMom().Mag()<0.8) 
+  isTPCElectron=trk->nSigmaElectron()<JPSI_Cuts::nSigmaElectron_max &&
+                trk->nSigmaElectron()>JPSI_Cuts::nSigmaElectron_min;
+  else isTPCElectron =trk->nSigmaElectron()<JPSI_Cuts::nSigmaElectron_max &&
+                      trk->nSigmaElectron()>(3*trk->pMom().Mag()+JPSI_Cuts::nSigmaElectron_lowhmom);
+  isTOFElectron = tofmatch?fabs(1./beta-1.)<JPSI_Cuts::oneOverBetaElectron:false;
+  return isTOFElectron + isTPCElectron;
+}
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk)const{}
 //______________________________________________________________
@@ -152,30 +165,6 @@ bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
               TrackCuts::nHitsFit2Dedx)
       );
 }//Check StMyCuts.h
-//______________________________________________________________
-void StMyHFMaker::initHistograms(){
-  
-  int nRuns = getTotalNRuns();
-
-  hNevent = new TH1D("hNevnet","Number of Events",nRuns,0,nRuns);                        //TODO: Declare the limits of 
-  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//the histograms for better 
-  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//readability 
-  hVr = new TH1D("hVr","V_{r}",xBins,0,EventCuts::vR+2);
-}
-//______________________________________________________________
-void StMyHFMaker::writeHistograms(){
-  hNevent->Write();
-  hVzTPC->Write();
-  hVzVPD->Write();
-  hVr->Write();
-}
-//______________________________________________________________
-void StMyHFMaker::deleteHistograms(){
-  delete hNevent;
-  delete hVzTPC;
-  delete hVzVPD;
-  delete hVr;
-}
 //______________________________________________________________
 void StMyHFMaker::initNTuples(){}
 //______________________________________________________________
@@ -222,4 +211,31 @@ double StMyHFMaker::getTofBeta(StPicoTrack const* const trk) const
     }
   } 
   return beta;
+}
+//______________________________________________________________
+void StMyHFMaker::initHistograms(){
+  
+  int nRuns = getTotalNRuns();
+
+  hNevent = new TH1D("hNevnet","Number of Events",nRuns,0,nRuns);                        //TODO: Declare the limits of 
+  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//the histograms for better 
+  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//readability 
+  hVr = new TH1D("hVr","V_{r}",xBins,0,EventCuts::vR+2);
+  hNsigmaElectron = new TH1D("hNsigmaElectron", "n^{#Sigma}_{e}",100,-5,5);
+}
+//______________________________________________________________
+void StMyHFMaker::writeHistograms(){
+  hNevent->Write();
+  hVzTPC->Write();
+  hVzVPD->Write();
+  hVr->Write();
+  hNsigmaElectron->Write();
+}
+//______________________________________________________________
+void StMyHFMaker::deleteHistograms(){
+  delete hNevent;
+  delete hVzTPC;
+  delete hVzVPD;
+  delete hVr;
+  delete hNsigmaElectron;
 }

@@ -79,8 +79,6 @@ class StMyHFMaker : public StMaker
         UInt_t nTracks;
         Double_t beta;
         bool tofmatch;
-        bool isTPCElectron;
-        bool isTOFElectron;
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
@@ -96,6 +94,7 @@ class StMyHFMaker : public StMaker
         TH1D* hVzTPC;
         TH1D* hVzVPD;
         TH1D* hVr;
+        TH1D* hNsigmaElectron;
         // Things
         int  mRunId;
 

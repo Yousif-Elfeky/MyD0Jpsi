@@ -22,6 +22,9 @@ namespace D0_Cuts{
 
 }//D0_Cuts
 namespace JPSI_Cuts{
-
+    float nSigmaElectron_min = -0.75; //nSigmaElectron > -0.75 if mom>0.8 GeV
+    float nSigmaElectron_max = 2;  //nSigmaElectron < 2 for all mom
+    float nSigmaElectron_lowhmom = -3.15; // nSigmaElectron > 3*mom.Mag()-3.15 if mom<0.8 GeV
+    float oneOverBetaElectron = 0.025; // (1/(β-1)) < 0.025
 }//JPSI_Cuts
 #endif // !StMyCuts_hh
