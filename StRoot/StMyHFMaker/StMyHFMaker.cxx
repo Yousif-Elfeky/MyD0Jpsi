@@ -127,7 +127,6 @@ Int_t StMyHFMaker::Make()
     if(isPion(trk))pairPions(trk);
     if(isKaon(trk))pairKaons(trk);
   }
-  if(DEBUG)std::cout<<"Exited track loop after nTracks = " << nTracks << '\n';
   makeJPSI();
   makeD0();
 
@@ -162,6 +161,7 @@ void StMyHFMaker::pairElectrons(StPicoTrack const* trk){
   particleinfo.Eta = mom.Eta();
   particleinfo.Phi = mom.Phi();
   particleinfo.Pt = mom.Perp();
+  particleinfo.trackId = trk->id();
   if(trk->charge()<0) electroninfo.push_back(particleinfo);
   else if(trk->charge()>0) positroninfo.push_back(particleinfo);
 }
@@ -175,7 +175,7 @@ void StMyHFMaker::pairPions(StPicoTrack const* trk){
   particleinfo.Eta = mom.Eta();
   particleinfo.Phi = mom.Phi();
   particleinfo.Pt = mom.Perp();
-
+  particleinfo.trackId = trk->id();
   if(trk->charge()>0) pionplusinfo.push_back(particleinfo);
   else if(trk->charge()<0) pionminusinfo.push_back(particleinfo);
 }
@@ -189,7 +189,7 @@ void StMyHFMaker::pairKaons(StPicoTrack const* trk){
   particleinfo.Eta = mom.Eta();
   particleinfo.Phi = mom.Phi();
   particleinfo.Pt = mom.Perp();
-
+  particleinfo.trackId = trk->id();
   if(trk->charge()>0) kaonplusinfo.push_back(particleinfo);
   else if(trk->charge()<0) kaonminusinfo.push_back(particleinfo);
 }
@@ -199,75 +199,89 @@ void StMyHFMaker::makeJPSI(){
   TLorentzVector pair_4v(0,0,0,0), p1_4v(0,0,0,0), p2_4v(0,0,0,0);
 
   // 1. Unlike-Sign Signal Pairs (e+ e-)
-  for(const auto& electron : electroninfo) {
+  for(const auto& electron : electroninfo) 
+  {
     p1_4v.SetPxPyPzE(electron.px, electron.py, electron.pz, electron.Energy);
-    for(const auto& positron : positroninfo) {
-        p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
-        pair_4v = p1_4v + p2_4v;
-        hMee_ULike->Fill(pair_4v.M());
+    for(const auto& positron : positroninfo) 
+    {
+      p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_ULike->Fill(pair_4v.M());
     }
   }
 
   // 2. Like-Sign Background: Positron Pairs (e+ e+)
-  for(uint i = 0; i < positroninfo.size(); ++i) {
+  for(uint i = 0; i < positroninfo.size(); ++i) 
+  {
     p1_4v.SetPxPyPzE(positroninfo[i].px, positroninfo[i].py, positroninfo[i].pz, positroninfo[i].Energy);
-    for(uint j = i + 1; j < positroninfo.size(); ++j) { 
-        p2_4v.SetPxPyPzE(positroninfo[j].px, positroninfo[j].py, positroninfo[j].pz, positroninfo[j].Energy);
-        pair_4v = p1_4v + p2_4v;
-        hMee_Like1->Fill(pair_4v.M());
+    for(uint j = i + 1; j < positroninfo.size(); ++j) 
+    { 
+      p2_4v.SetPxPyPzE(positroninfo[j].px, positroninfo[j].py, positroninfo[j].pz, positroninfo[j].Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_Like1->Fill(pair_4v.M());
     }
   }
 
   // 3. Like-Sign Background: Electron Pairs (e- e-)
   for(uint i = 0; i < electroninfo.size(); ++i) {
     p1_4v.SetPxPyPzE(electroninfo[i].px, electroninfo[i].py, electroninfo[i].pz, electroninfo[i].Energy);
-    for(uint j = i + 1; j < electroninfo.size(); ++j) { 
-        p2_4v.SetPxPyPzE(electroninfo[j].px, electroninfo[j].py, electroninfo[j].pz, electroninfo[j].Energy);
-        pair_4v = p1_4v + p2_4v;
-        hMee_Like2->Fill(pair_4v.M());
+    for(uint j = i + 1; j < electroninfo.size(); ++j) 
+    { 
+      p2_4v.SetPxPyPzE(electroninfo[j].px, electroninfo[j].py, electroninfo[j].pz, electroninfo[j].Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_Like2->Fill(pair_4v.M());
     }
   }
 }
 //______________________________________________________________
 void StMyHFMaker::makeD0(){
-  
+
+  StPicoDst const* picoDst = mPicoDstMaker->picoDst();
+  TVector3 primaryVertex = picoDst->event()->primaryVertex();
+  float bField = picoDst->event()->bField();
+
   TLorentzVector d0FourMom(0,0,0,0),kaon4V(0,0,0,0),pion4V(0,0,0,0);
-    // Unlike-Sign (K- pi+)
-    for(const auto& kaon : kaonminusinfo) {
-        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-        for(const auto& pion : pionplusinfo) {
-            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-            d0FourMom = kaon4V + pion4V;
-            hMpik_ULike1->Fill(d0FourMom.M());
-        }
+  // Unlike-Sign (K- pi+)
+  for(const auto& kaon : kaonminusinfo) {    
+    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
+    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+    for(const auto& pion : pionplusinfo) {
+      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
+      if (!pionTrack || pion.trackId == kaon.trackId) continue;
+
+      StPhysicalHelixD kaonHelix = kaonTrack->helix(bField);
+      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+      d0FourMom = kaon4V + pion4V;
+      hMpik_ULike1->Fill(d0FourMom.M());
     }
-    // Unlike-Sign (K+ pi-)
-    for(const auto& kaon : kaonplusinfo) {
-        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-        for(const auto& pion : pionminusinfo) {
-            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-            d0FourMom = kaon4V + pion4V;
-            hMpik_ULike2->Fill(d0FourMom.M());
-        }
+  }
+  // Unlike-Sign (K+ pi-)
+  for(const auto& kaon : kaonplusinfo) {
+    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+    for(const auto& pion : pionminusinfo) {
+      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+      d0FourMom = kaon4V + pion4V;
+      hMpik_ULike2->Fill(d0FourMom.M());
     }
-    // Like-Sign (K+ pi+)
-    for(const auto& kaon : kaonplusinfo) {
-        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-        for(const auto& pion : pionplusinfo) {
-            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-            d0FourMom = kaon4V + pion4V;
-            hMpik_Like1->Fill(d0FourMom.M());
-        }
+  }
+  // Like-Sign (K+ pi+)
+  for(const auto& kaon : kaonplusinfo) {
+    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+    for(const auto& pion : pionplusinfo) {
+      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+      d0FourMom = kaon4V + pion4V;
+      hMpik_Like1->Fill(d0FourMom.M());
     }
-    // Like-Sign (K- pi-)
-    for(const auto& kaon : kaonminusinfo) {
-        kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-        for(const auto& pion : pionminusinfo) {
-            pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-            d0FourMom = kaon4V + pion4V;
-            hMpik_Like2->Fill(d0FourMom.M());
-        }
+  }
+  // Like-Sign (K- pi-)
+  for(const auto& kaon : kaonminusinfo) {
+    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
+    for(const auto& pion : pionminusinfo) {
+      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+      d0FourMom = kaon4V + pion4V;
+      hMpik_Like2->Fill(d0FourMom.M());
     }
+  }
 }
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
@@ -295,7 +309,7 @@ bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk, float DCA)const{
           (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
           (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
               TrackCuts::nHitsFit2Dedx) &&
-          (DCA <= TrackCuts::DCA)
+          (DCA > TrackCuts::DCA)
       );
 }//Check StMyCuts.h
 //______________________________________________________________

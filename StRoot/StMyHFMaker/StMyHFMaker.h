@@ -31,6 +31,7 @@ struct Particle{
     Float_t Eta;
     Float_t Phi;
     Float_t Pt;
+    UInt_t trackId;
 };
 
 class StMyHFMaker : public StMaker
