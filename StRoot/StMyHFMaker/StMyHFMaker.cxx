@@ -127,6 +127,7 @@ Int_t StMyHFMaker::Make()
     if(isPion(trk))pairPions(trk);
     if(isKaon(trk))pairKaons(trk);
   }
+  if(DEBUG)std::cout<<"Exited track loop\n";
   makeJPSI();
   makeD0();
 
