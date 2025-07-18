@@ -55,6 +55,7 @@ class StMyHFMaker : public StMaker
         void initNTuples();
         // void writeNTuples();
         void pairElectrons(StPicoTrack const* trk);
+        void makeJPSI(vector<Particle> electron,vector<Particle> positron);
         int getTotalNRuns();
         double getTofBeta(StPicoTrack const* const trk) const;
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
@@ -99,6 +100,9 @@ class StMyHFMaker : public StMaker
         TH1D* hVzVPD;
         TH1D* hVr;
         TH1D* hNsigmaElectron;
+        TH1D* hMee_ULike;
+        TH1D* hMee_Like1;
+        TH1D* hMee_Like2;
         // Things
         int  mRunId;
         Particle particleinfo;
