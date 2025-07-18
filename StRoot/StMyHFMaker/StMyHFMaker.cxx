@@ -34,6 +34,7 @@
 
 #include "StMyCuts.h"
 #include "StMyHFMaker.h"
+#include "../StPicoCharmContainers/StKaonPion.h"
 
 #ifndef C_C_LIGHT
 #define C_C_LIGHT 299792458
@@ -248,38 +249,77 @@ void StMyHFMaker::makeD0(){
     for(const auto& pion : pionplusinfo) {
       StPicoTrack* pionTrack = picoDst->track(pion.trackId);
       if (!pionTrack || pion.trackId == kaon.trackId) continue;
-
-      StPhysicalHelixD kaonHelix = kaonTrack->helix(bField);
-      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-      d0FourMom = kaon4V + pion4V;
-      hMpik_ULike1->Fill(d0FourMom.M());
+      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
+      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
+      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
+      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
+      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
+      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
+      {
+        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+        d0FourMom = kaon4V + pion4V;
+        hMpik_ULike1->Fill(d0FourMom.M());
+      }
     }
   }
   // Unlike-Sign (K+ pi-)
   for(const auto& kaon : kaonplusinfo) {
+    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
     kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
     for(const auto& pion : pionminusinfo) {
-      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-      d0FourMom = kaon4V + pion4V;
-      hMpik_ULike2->Fill(d0FourMom.M());
+      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
+      if (!pionTrack || pion.trackId == kaon.trackId) continue;
+      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
+      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
+      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
+      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
+      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
+      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
+      {
+        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+        d0FourMom = kaon4V + pion4V;
+        hMpik_ULike2->Fill(d0FourMom.M());
+      }
     }
   }
   // Like-Sign (K+ pi+)
   for(const auto& kaon : kaonplusinfo) {
+    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
     kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
     for(const auto& pion : pionplusinfo) {
-      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-      d0FourMom = kaon4V + pion4V;
-      hMpik_Like1->Fill(d0FourMom.M());
+      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
+      if (!pionTrack || pion.trackId == kaon.trackId) continue;
+      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
+      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
+      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
+      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
+      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
+      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
+      {
+        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+        d0FourMom = kaon4V + pion4V;
+        hMpik_Like1->Fill(d0FourMom.M());
+      }
     }
   }
   // Like-Sign (K- pi-)
   for(const auto& kaon : kaonminusinfo) {
+    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
     kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
     for(const auto& pion : pionminusinfo) {
-      pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-      d0FourMom = kaon4V + pion4V;
-      hMpik_Like2->Fill(d0FourMom.M());
+      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
+      if (!pionTrack || pion.trackId == kaon.trackId) continue;
+      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
+      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
+      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
+      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
+      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
+      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
+      {
+        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
+        d0FourMom = kaon4V + pion4V;
+        hMpik_Like2->Fill(d0FourMom.M());
+      }
     }
   }
 }

@@ -1,7 +1,6 @@
 #include <limits>
 #include <cmath>
 
-#ifdef __ROOT__
 #include "StKaonPion.h"
 
 #include "TLorentzVector.h"
@@ -131,4 +130,3 @@ StKaonPion::StKaonPion(StPicoTrack const& kaon, StPicoTrack const& pion, TVector
    mphasePi = pHelix.phase();
    mhPi = pHelix.h();
 }
-#endif // __ROOT__

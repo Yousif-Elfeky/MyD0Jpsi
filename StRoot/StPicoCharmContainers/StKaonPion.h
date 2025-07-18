@@ -1,6 +1,5 @@
 #ifndef StKaonPion_hh
 #define StKaonPion_hh
-#ifdef __ROOT__
 
 /* **************************************************
  *  A specialized pair class for calculating K-π pair 
@@ -198,6 +197,5 @@ inline float StKaonPion::dipAnglePi() {return mdipAnglePi;}
 inline float StKaonPion::phasePi() {return mphasePi;}
 inline float StKaonPion::hPi()  {return mhPi;}
 
-#endif
 #endif
 
