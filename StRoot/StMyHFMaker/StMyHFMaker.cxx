@@ -9,7 +9,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <cmath>
 
 #include "TFile.h"
 #include "TMath.h"
