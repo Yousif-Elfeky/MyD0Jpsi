@@ -284,6 +284,7 @@ bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
   {
     if (picoEvent->isTrigger(trg)) return true;  
   }
+  return false;
 }//Check StMyCuts.h
 //______________________________________________________________
 bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk, float DCA)const{
