@@ -101,8 +101,7 @@ Int_t StMyHFMaker::Make()
   
   TPCVer = picoEvent->primaryVertex();hVzTPC->Fill(TPCVer.z());
   VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
-  Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));
-  hVr->Fill(Vr);
+  Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
 
   return kStOK;
 }
