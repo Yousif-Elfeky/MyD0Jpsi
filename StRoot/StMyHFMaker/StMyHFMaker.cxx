@@ -118,6 +118,10 @@ Int_t StMyHFMaker::Make()
   std::vector<unsigned int> idxPicoPions;
   std::vector<unsigned int> idxPicoKaons;
   StRefMultCorr* refmultCorrUtil = CentralityMaker::instance()->getRefMultCorr();
+  if (!refmultCorrUtil) {
+    LOG_WARN << "StMyHFMaker::Make() - CentralityMaker returned a null StRefMultCorr pointer! Skipping event." << endm;
+    return kStWarn;
+  }
   refmultCorrUtil->init(mRunId);
   if (refmultCorrUtil->isBadRun(mRunId)) {
       return kStOK;
