@@ -340,6 +340,7 @@ bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
   return ((trk->gPt() > TrackCuts::gPt)&&
           ((trk->gMom().Eta()) < TrackCuts::Eta)&&
           (trk->nHitsFit() > TrackCuts::nHitsFit)&&
+          (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
           (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
               TrackCuts::nHitsFit2Dedx)
       );
