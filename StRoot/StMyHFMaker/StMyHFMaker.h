@@ -13,7 +13,7 @@
 #include "TString.h"
 #include "TVector3.h"
 #include "StMaker.h"
-
+#include <vector>
 class TString;
 class TFile;
 class TNtuple;
