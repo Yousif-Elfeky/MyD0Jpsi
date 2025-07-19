@@ -65,9 +65,9 @@ class StMyHFMaker : public StMaker
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
         bool isGoodTrack(StPicoTrack const* trk, float DCA)const;
-        bool isPion(StPicoTrack const* trk)const;
-        bool isKaon(StPicoTrack const* trk)const;
-        bool isElectron(StPicoTrack const* trk)const;
+        bool isElectron(StPicoTrack const* trk, bool tofMatch, float beta)const;
+        bool isPion(StPicoTrack const* trk, bool tofMatch, float beta)const;
+        bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta)const;
         bool isBadrun(Int_t runId);
         
         StPicoDstMaker* mPicoDstMaker;
@@ -90,6 +90,7 @@ class StMyHFMaker : public StMaker
         float M_ELECTRON=0.000511;//GeV
         float M_PION=0.139570;//GeV
         float M_KAON=0.493677;//GeV
+        float dca_to_pv;
         // NTuples Here.
         TNtuple* mPion;
         TNtuple* mKaon;
