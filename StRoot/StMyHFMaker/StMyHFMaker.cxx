@@ -96,17 +96,18 @@ Int_t StMyHFMaker::Make()
   {
   LOG_WARN << "No PicoDst! Skip! " << endm;
   return kStWarn;
+  }  
+  StPicoEvent const * picoEvent = picoDst->event();
+  if (!picoEvent) {
+    LOG_WARN << "No PicoEvent! Skip! " << endm;
+    return kStWarn;
   }
 
-  
-  StPicoEvent const * picoEvent = picoDst->event();
-  
   electroninfo.clear();
   positroninfo.clear();  
 
   mRunId = picoEvent->runId();
   hNevent->Fill(runnum[mRunId]);
-  
   if(!isGoodEvent(picoEvent))return kStOK;
   
   TPCVer = picoEvent->primaryVertex();hVzTPC->Fill(TPCVer.z());
