@@ -119,6 +119,9 @@ Int_t StMyHFMaker::Make()
   std::vector<unsigned int> idxPicoKaons;
   StRefMultCorr* refmultCorrUtil = CentralityMaker::instance()->getRefMultCorr();
   refmultCorrUtil->init(mRunId);
+  if (refmultCorrUtil->isBadRun(mRunId)) {
+      return kStOK;
+  }
   refmultCorrUtil->initEvent(picoEvent->grefMult(), vz, picoEvent->ZDCx());
   mCentralityBin = refmultCorrUtil->getCentralityBin9();
   if (mCentralityBin < 0) return kStOK;
