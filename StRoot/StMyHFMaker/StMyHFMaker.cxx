@@ -112,7 +112,7 @@ Int_t StMyHFMaker::Make()
   float vz = picoEvent->primaryVertex().z();
   VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
   Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
-  
+
   mCentralityBin = getCentralityBin(picoEvent->grefMult());
     if (mCentralityBin < 0) {
       return kStOK;
@@ -480,6 +480,49 @@ void StMyHFMaker::initHistograms(){
   hMpik_ULike2 = new TH1D("hMpik_ULike2","K^{+} #pi^{-}",xBins,0,3);
   hMpik_Like1 = new TH1D("hMpik_Like1","K^{+} #pi^{+}",xBins,0,3);
   hMpik_Like2 = new TH1D("hMpik_Like2","K^{-} #pi^{-}",xBins,0,3);
+
+  const int N_PT_BINS_JPSI = 10;
+  const double pt_bins_jpsi[N_PT_BINS_JPSI + 1] = {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.0, 10.0};
+
+  const int N_PT_BINS_D0 = 10;
+  const double pt_bins_d0[N_PT_BINS_D0 + 1] = {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 7.0, 10.0};
+  
+  const int N_MASS_BINS_JPSI = 100;
+  double mass_bins_jpsi[N_MASS_BINS_JPSI + 1];
+  for (int i = 0; i <= N_MASS_BINS_JPSI; ++i) {
+      mass_bins_jpsi[i] = 2.8 + i * (3.4 - 2.8) / N_MASS_BINS_JPSI;
+  }
+  const int N_MASS_BINS_D0 = 100;
+  double mass_bins_d0[N_MASS_BINS_D0 + 1];
+  for (int i = 0; i <= N_MASS_BINS_D0; ++i) {
+      mass_bins_d0[i] = 1.7 + i * (2.1 - 1.7) / N_MASS_BINS_D0;
+  }
+
+  for (int i = 0; i < N_CENT_BINS; ++i) {
+      TString cent_label = Form("cent%d", i);
+
+      // --- J/psi Histograms ---
+      TString jpsi_mass_pt_name = "hMassPt_Jpsi_" + cent_label;
+      TString jpsi_mass_pt_title = "J/#psi Mass vs p_{T} " + cent_label + ";M_{ee} (GeV/c^{2});p_{T} (GeV/c)";
+      hMassPt_Jpsi[i] = new TH2D(jpsi_mass_pt_name.Data(), jpsi_mass_pt_title.Data(), N_MASS_BINS_JPSI, mass_bins_jpsi, N_PT_BINS_JPSI, pt_bins_jpsi);
+      TString jpsi_v1_name = "pV1vsPt_Jpsi_" + cent_label;
+      TString jpsi_v1_title = "J/#psi Raw v_{1} vs p_{T} " + cent_label + ";p_{T} (GeV/c);<cos(#phi - #Psi_{1})>";
+      pV1vsPt_Jpsi[i] = new TProfile(jpsi_v1_name.Data(), jpsi_v1_title.Data(), N_PT_BINS_JPSI, pt_bins_jpsi);
+      TString jpsi_v2_name = "pV2vsPt_Jpsi_" + cent_label;
+      TString jpsi_v2_title = "J/#psi Raw v_{2} vs p_{T} " + cent_label + ";p_{T} (GeV/c);<cos(2(#phi - #Psi_{2}))>";
+      pV2vsPt_Jpsi[i] = new TProfile(jpsi_v2_name.Data(), jpsi_v2_title.Data(), N_PT_BINS_JPSI, pt_bins_jpsi);
+
+      // --- D0 Histograms ---
+      TString d0_mass_pt_name = "hMassPt_D0_" + cent_label;
+      TString d0_mass_pt_title = "D^{0} Mass vs p_{T} " + cent_label + ";M_{K#pi} (GeV/c^{2});p_{T} (GeV/c)";
+      hMassPt_D0[i] = new TH2D(d0_mass_pt_name.Data(), d0_mass_pt_title.Data(), N_MASS_BINS_D0, mass_bins_d0, N_PT_BINS_D0, pt_bins_d0);
+      TString d0_v1_name = "pV1vsPt_D0_" + cent_label;
+      TString d0_v1_title = "D^{0} Raw v_{1} vs p_{T} " + cent_label + ";p_{T} (GeV/c);<cos(#phi - #Psi_{1})>";
+      pV1vsPt_D0[i] = new TProfile(d0_v1_name.Data(), d0_v1_title.Data(), N_PT_BINS_D0, pt_bins_d0);
+      TString d0_v2_name = "pV2vsPt_D0_" + cent_label;
+      TString d0_v2_title = "D^{0} Raw v_{2} vs p_{T} " + cent_label + ";p_{T} (GeV/c);<cos(2(#phi - #Psi_{2}))>";
+      pV2vsPt_D0[i] = new TProfile(d0_v2_name.Data(), d0_v2_title.Data(), N_PT_BINS_D0, pt_bins_d0);
+  }
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){
