@@ -31,6 +31,8 @@
 #include "StPicoEvent/StPicoBEmcPidTraits.h"
 #include "StPicoEvent/StPicoMtdPidTraits.h"
 #include "StMemStat.h"
+#include "StRefMultCorr/StRefMultCorr.h"
+#include "StRefMultCorr/CentralityMaker.h"
 
 #include "StMyCuts.h"
 #include "StMyHFMaker.h"
@@ -108,12 +110,22 @@ Int_t StMyHFMaker::Make()
   if(!isGoodEvent(picoEvent))return kStOK;
   
   TPCVer = picoEvent->primaryVertex();hVzTPC->Fill(TPCVer.z());
+  float vz = picoEvent->primaryVertex().z();
   VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
   Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
 
   nTracks = picoDst->numberOfTracks();
   std::vector<unsigned int> idxPicoPions;
   std::vector<unsigned int> idxPicoKaons;
+  StRefMultCorr* refmultCorrUtil = CentralityMaker::instance()->getRefMultCorr();
+  refmultCorrUtil->init(mRunId);
+  refmultCorrUtil->initEvent(picoEvent->grefMult(), vz, picoEvent->ZDCx());
+  mCentralityBin = refmultCorrUtil->getCentralityBin9();
+  if (mCentralityBin < 0) return kStOK;
+  double weight = refmultCorrUtil->getWeight();
+
+  mEventPlane1 = calcEventPlane(picoDst, picoEvent, 1); // For v1
+  mEventPlane2 = calcEventPlane(picoDst, picoEvent, 2); // For v2
   float eventPlane = calcEventPlane(picoDst, picoEvent, 2);
   hEventPlane->Fill(eventPlane);
   // Track Loop
@@ -245,6 +257,13 @@ void StMyHFMaker::makeJPSI(){
       p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
       pair_4v = p1_4v + p2_4v;
       hMee_ULike->Fill(pair_4v.M());
+      if (pair_4v.M() > 2.9 && pair_4v.M() < 3.2) {
+      float jpsi_pt = pair_4v.Perp();
+      float jpsi_phi = pair_4v.Phi();
+      hMassPt_Jpsi[mCentralityBin]->Fill(pair_4v.M(), jpsi_pt);
+      pV1vsPt_Jpsi[mCentralityBin]->Fill(jpsi_pt, TMath::Cos(1. * (jpsi_phi - mEventPlane1)));
+      pV2vsPt_Jpsi[mCentralityBin]->Fill(jpsi_pt, TMath::Cos(2. * (jpsi_phi - mEventPlane2)));
+  }
     }
   }
   // 2. Like-Sign Background: Positron Pairs (e+ e+)
@@ -300,10 +319,24 @@ for (unsigned int iK = 0; iK < kaonIndices.size(); ++iK) {
         // Unlike-Sign: K- pi+
         if (k_charge < 0 && pi_charge > 0) {
           hMpik_ULike1->Fill(kaonPion.m());
+          if (kaonPion.m() > 1.82 && kaonPion.m() < 1.91) {
+          float d0_pt = kaonPion.pt();
+          float d0_phi = kaonPion.phi();
+          hMassPt_D0[mCentralityBin]->Fill(kaonPion.m(), d0_pt);
+          pV1vsPt_D0[mCentralityBin]->Fill(d0_pt, TMath::Cos(1. * (d0_phi - mEventPlane1)));
+          pV2vsPt_D0[mCentralityBin]->Fill(d0_pt, TMath::Cos(2. * (d0_phi - mEventPlane2)));
+          }
         }
         // Unlike-Sign: K+ pi-
         else if (k_charge > 0 && pi_charge < 0) {
           hMpik_ULike2->Fill(kaonPion.m());
+          if (kaonPion.m() > 1.82 && kaonPion.m() < 1.91) {
+          float d0_pt = kaonPion.pt();
+          float d0_phi = kaonPion.phi();
+          hMassPt_D0[mCentralityBin]->Fill(kaonPion.m(), d0_pt);
+          pV1vsPt_D0[mCentralityBin]->Fill(d0_pt, TMath::Cos(1. * (d0_phi - mEventPlane1)));
+          pV2vsPt_D0[mCentralityBin]->Fill(d0_pt, TMath::Cos(2. * (d0_phi - mEventPlane2)));
+          }
         }
         // Like-Sign: K+ pi+
         else if (k_charge > 0 && pi_charge > 0) {
@@ -451,6 +484,14 @@ void StMyHFMaker::writeHistograms(){
   hMpik_ULike2->Write();
   hMpik_Like1->Write();
   hMpik_Like2->Write();
+  for (int i = 0; i < N_CENT_BINS; ++i) {
+    hMassPt_Jpsi[i]->Write();
+    pV1vsPt_Jpsi[i]->Write();
+    pV2vsPt_Jpsi[i]->Write();
+    hMassPt_D0[i]->Write();
+    pV1vsPt_D0[i]->Write();
+    pV2vsPt_D0[i]->Write();
+  }
 }
 //______________________________________________________________
 void StMyHFMaker::deleteHistograms(){
@@ -467,4 +508,12 @@ void StMyHFMaker::deleteHistograms(){
   delete hMpik_ULike2;
   delete hMpik_Like1;
   delete hMpik_Like2;
+  for (int i = 0; i < N_CENT_BINS; ++i) {
+    delete hMassPt_Jpsi[i];
+    delete pV1vsPt_Jpsi[i];
+    delete pV2vsPt_Jpsi[i];
+    delete hMassPt_D0[i];
+    delete pV1vsPt_D0[i];
+    delete pV2vsPt_D0[i];
+  }
 }

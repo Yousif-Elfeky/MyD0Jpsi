@@ -10,10 +10,13 @@
 */
 #include "TChain.h"
 #include "TH1.h"
+#include "TH2.h"
+#include "TProfile.h"
 #include "TString.h"
 #include "TVector3.h"
 #include "StMaker.h"
 #include <vector>
+
 class TString;
 class TFile;
 class TNtuple;
@@ -22,6 +25,9 @@ class StPicoDst;
 class StPicoTrack;
 class StPicoDstMaker;
 class StPicoEvent;
+class TH1D;
+class TH2D;
+class TProfile;
 
 struct Particle{
     Short_t charge;
@@ -34,6 +40,10 @@ struct Particle{
     Float_t Pt;
     UInt_t trackId;
 };
+
+const int N_CENT_BINS = 9; // For 0-10, 10-20, ..., 70-80%
+const int N_PT_BINS_JPSI = 10;
+const int N_PT_BINS_D0 = 10;
 
 class StMyHFMaker : public StMaker
 {
@@ -73,7 +83,10 @@ class StMyHFMaker : public StMaker
         bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta, float DCA)const;
         bool isBadrun(Int_t runId);
         float calcEventPlane(StPicoDst const* const picoDst, StPicoEvent const* picoEvent, const int n) const;
-        
+        int mCentralityBin;
+        float mEventPlane1;
+        float mEventPlane2;
+
         StPicoDstMaker* mPicoDstMaker;
         TString mInputFilesList;
         TString mOutFileBaseName;
@@ -119,6 +132,12 @@ class StMyHFMaker : public StMaker
         TH1D* hMpik_ULike2;
         TH1D* hMpik_Like1;
         TH1D* hMpik_Like2;
+        TH2D* hMassPt_Jpsi[N_CENT_BINS];
+        TProfile* pV1vsPt_Jpsi[N_CENT_BINS];
+        TProfile* pV2vsPt_Jpsi[N_CENT_BINS];
+        TH2D* hMassPt_D0[N_CENT_BINS];
+        TProfile* pV1vsPt_D0[N_CENT_BINS];
+        TProfile* pV2vsPt_D0[N_CENT_BINS];
         // Things
         int  mRunId;
         Particle particleinfo;
