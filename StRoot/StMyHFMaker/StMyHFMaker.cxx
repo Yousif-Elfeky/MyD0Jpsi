@@ -31,8 +31,6 @@
 #include "StPicoEvent/StPicoBEmcPidTraits.h"
 #include "StPicoEvent/StPicoMtdPidTraits.h"
 #include "StMemStat.h"
-#include "StRefMultCorr/StRefMultCorr.h"
-#include "StRefMultCorr/CentralityMaker.h"
 
 #include "StMyCuts.h"
 #include "StMyHFMaker.h"
@@ -114,23 +112,15 @@ Int_t StMyHFMaker::Make()
   float vz = picoEvent->primaryVertex().z();
   VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
   Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
+  
+  mCentralityBin = getCentralityBin(picoEvent->grefMult());
+    if (mCentralityBin < 0) {
+      return kStOK;
+  }
 
   nTracks = picoDst->numberOfTracks();
   std::vector<unsigned int> idxPicoPions;
   std::vector<unsigned int> idxPicoKaons;
-  StRefMultCorr* refmultCorrUtil = CentralityMaker::instance()->getRefMultCorr();
-  if (!refmultCorrUtil) {
-    LOG_WARN << "StMyHFMaker::Make() - CentralityMaker returned a null StRefMultCorr pointer! Skipping event." << endm;
-    return kStWarn;
-  }
-  refmultCorrUtil->init(mRunId);
-  if (refmultCorrUtil->isBadRun(mRunId)) {
-      return kStOK;
-  }
-  refmultCorrUtil->initEvent(picoEvent->grefMult(), vz, picoEvent->ZDCx());
-  mCentralityBin = refmultCorrUtil->getCentralityBin9();
-  if (mCentralityBin < 0) return kStOK;
-  double weight = refmultCorrUtil->getWeight();
 
   mEventPlane1 = calcEventPlane(picoDst, picoEvent, 1); // For v1
   mEventPlane2 = calcEventPlane(picoDst, picoEvent, 2); // For v2
@@ -457,6 +447,20 @@ float StMyHFMaker::calcEventPlane(StPicoDst const* const picoDst, StPicoEvent co
 	float eventPlane_nocorrection = Q_nocorrection.Phi();
 	if (eventPlane_nocorrection < 0) eventPlane_nocorrection += 2.0*TMath::Pi();
 	return eventPlane_nocorrection / n;
+}
+//______________________________________________________________
+int StMyHFMaker::getCentralityBin(int grefmult) const {
+  int grefmult_cuts_10_percent[] = {256, 185, 132, 93, 63, 40, 24, 14};
+    if (grefmult > grefmult_cuts_10_percent[0]) return 0;
+  for (int i = 0; i < 7; ++i) { 
+    if (grefmult > grefmult_cuts_10_percent[i+1] && grefmult <= grefmult_cuts_10_percent[i]) {
+      return i + 1;
+    }
+  }    
+  if (grefmult > grefmult_cuts_10_percent[7] && grefmult <= grefmult_cuts_10_percent[6]) {
+    return 7;
+  }
+  return -1;
 }
 //______________________________________________________________
 void StMyHFMaker::initHistograms(){

@@ -83,6 +83,7 @@ class StMyHFMaker : public StMaker
         bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta, float DCA)const;
         bool isBadrun(Int_t runId);
         float calcEventPlane(StPicoDst const* const picoDst, StPicoEvent const* picoEvent, const int n) const;
+        int getCentralityBin(int grefmult) const;
         int mCentralityBin;
         float mEventPlane1;
         float mEventPlane2;

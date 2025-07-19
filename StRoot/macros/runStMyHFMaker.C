@@ -12,7 +12,6 @@ void runStMyHFMaker(TString picolist="input.list" , std::string  runlist="run.li
   gSystem->Load("StPicoEvent");
   gSystem->Load("StPicoDstMaker");
   gSystem->Load("StPicoCharmContainers");
-  gSystem->Load("StRefMultCorr");
   gSystem->Load("StMyHFMaker");
 
   chain = new StChain();
