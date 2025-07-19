@@ -227,41 +227,77 @@ void StMyHFMaker::pairKaons(StPicoTrack const* trk){
 }
 //______________________________________________________________
 void StMyHFMaker::makeJPSI(){
-
-  TLorentzVector pair_4v(0,0,0,0), p1_4v(0,0,0,0), p2_4v(0,0,0,0);
-
-  // 1. Unlike-Sign Signal Pairs (e+ e-)
-  for(const auto& electron : electroninfo) 
+  uint electron_idx = 0; uint positron_idx = 0;
+  uint nElectron = electroninfo.size(); uint nPositron = positroninfo.size();
+  TLorentzVector pair(0,0,0,0);
+  TLorentzVector particle1_4V(0,0,0,0);
+  TLorentzVector particle2_4V(0,0,0,0);
+  //Like-Sign Background Positron Pairs.
+  for(electron_idx=0;electron_idx<nPositron;electron_idx++)
   {
-    p1_4v.SetPxPyPzE(electron.px, electron.py, electron.pz, electron.Energy);
-    for(const auto& positron : positroninfo) 
+    particle1_4V.SetPxPyPzE(
+      positroninfo[electron_idx].px,
+      positroninfo[electron_idx].py,
+      positroninfo[electron_idx].pz,
+      positroninfo[electron_idx].Energy
+    );
+    for(positron_idx=electron_idx+1;positron_idx<nPositron;positron_idx++)
     {
-      p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
-      pair_4v = p1_4v + p2_4v;
-      hMee_ULike->Fill(pair_4v.M());
+      particle2_4V.SetPxPyPzE(
+      positroninfo[positron_idx].px,
+      positroninfo[positron_idx].py,
+      positroninfo[positron_idx].pz,
+      positroninfo[positron_idx].Energy
+    );
+    pair=particle1_4V+particle2_4V;
+    //Fill Histograms and trees here
+    hMee_Like1->Fill(pair.M());
     }
   }
-
-  // 2. Like-Sign Background: Positron Pairs (e+ e+)
-  for(uint i = 0; i < positroninfo.size(); ++i) 
+  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
+  //Like-Sign Background Electron Pairs.
+  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
   {
-    p1_4v.SetPxPyPzE(positroninfo[i].px, positroninfo[i].py, positroninfo[i].pz, positroninfo[i].Energy);
-    for(uint j = i + 1; j < positroninfo.size(); ++j) 
-    { 
-      p2_4v.SetPxPyPzE(positroninfo[j].px, positroninfo[j].py, positroninfo[j].pz, positroninfo[j].Energy);
-      pair_4v = p1_4v + p2_4v;
-      hMee_Like1->Fill(pair_4v.M());
+    particle1_4V.SetPxPyPzE(
+      electroninfo[electron_idx].px,
+      electroninfo[electron_idx].py,
+      electroninfo[electron_idx].pz,
+      electroninfo[electron_idx].Energy
+    );
+    for(positron_idx=electron_idx+1;positron_idx<nElectron;positron_idx++)
+    {
+      particle2_4V.SetPxPyPzE(
+      electroninfo[positron_idx].px,
+      electroninfo[positron_idx].py,
+      electroninfo[positron_idx].pz,
+      electroninfo[positron_idx].Energy
+    );
+    pair=particle1_4V+particle2_4V;
+    //Fill Histograms and trees here
+    hMee_Like2->Fill(pair.M());
     }
   }
-
-  // 3. Like-Sign Background: Electron Pairs (e- e-)
-  for(uint i = 0; i < electroninfo.size(); ++i) {
-    p1_4v.SetPxPyPzE(electroninfo[i].px, electroninfo[i].py, electroninfo[i].pz, electroninfo[i].Energy);
-    for(uint j = i + 1; j < electroninfo.size(); ++j) 
-    { 
-      p2_4v.SetPxPyPzE(electroninfo[j].px, electroninfo[j].py, electroninfo[j].pz, electroninfo[j].Energy);
-      pair_4v = p1_4v + p2_4v;
-      hMee_Like2->Fill(pair_4v.M());
+  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
+  //Unlike-Sign Signal Pairs.
+  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
+  {
+    particle1_4V.SetPxPyPzE(
+      electroninfo[electron_idx].px,
+      electroninfo[electron_idx].py,
+      electroninfo[electron_idx].pz,
+      electroninfo[electron_idx].Energy
+    );
+    for(positron_idx=0;positron_idx<nPositron;positron_idx++)
+    {
+      particle2_4V.SetPxPyPzE(
+      positroninfo[positron_idx].px,
+      positroninfo[positron_idx].py,
+      positroninfo[positron_idx].pz,
+      positroninfo[positron_idx].Energy
+    );
+    pair=particle1_4V+particle2_4V;
+    //Fill Histograms and trees here
+    hMee_ULike->Fill(pair.M());
     }
   }
 }
