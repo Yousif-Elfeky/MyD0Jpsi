@@ -18,6 +18,7 @@ class TString;
 class TFile;
 class TNtuple;
 class TVector3;
+class StPicoDst;
 class StPicoTrack;
 class StPicoDstMaker;
 class StPicoEvent;
