@@ -72,6 +72,7 @@ class StMyHFMaker : public StMaker
         bool isPion(StPicoTrack const* trk, bool tofMatch, float beta)const;
         bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta)const;
         bool isBadrun(Int_t runId);
+        float calcEventPlane(StPicoDst const* const picoDst, StPicoEvent const* picoEvent, const int n) const;
         
         StPicoDstMaker* mPicoDstMaker;
         TString mInputFilesList;
@@ -106,6 +107,7 @@ class StMyHFMaker : public StMaker
         Int_t xBins = 40000;
         Int_t yBins = 40000;
         TH1D* hNevent;
+        TH1D* hEventPlane;
         TH1D* hVzTPC;
         TH1D* hVzVPD;
         TH1D* hVr;

@@ -114,6 +114,8 @@ Int_t StMyHFMaker::Make()
   nTracks = picoDst->numberOfTracks();
   std::vector<unsigned int> idxPicoPions;
   std::vector<unsigned int> idxPicoKaons;
+  float eventPlane = calcEventPlane(picoDst, picoEvent, 2);
+  hEventPlane->Fill(eventPlane);
   // Track Loop
   for (UInt_t itrack=0;itrack<nTracks;itrack++){
     StPicoTrack* trk = picoDst->track(itrack);
@@ -154,7 +156,7 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta, 
 
     bool isTOFElectron = tofMatch ? std::abs(1. / beta - 1.) < JPSI_Cuts::oneOverBetaElectron : false;
 
-    return (isTPCElectron || isTOFElectron) && DCA > 1.0;
+    return (isTPCElectron || isTOFElectron) && DCA > 0.0;
 }
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk, bool tofMatch, float beta) const {
@@ -268,48 +270,48 @@ void StMyHFMaker::makeD0(StPicoDst const* picoDst, TVector3 const& pVtx,
                          std::vector<unsigned int> const& kaonIndices,
                          std::vector<unsigned int> const& pionIndices) {
 
-    float const bField = picoDst->event()->bField();
+float const bField = picoDst->event()->bField();
 
-    for (unsigned int iK = 0; iK < kaonIndices.size(); ++iK) {
-        StPicoTrack const* kaonTrack = picoDst->track(kaonIndices[iK]);
-        if (!kaonTrack) continue;
+for (unsigned int iK = 0; iK < kaonIndices.size(); ++iK) {
+    StPicoTrack const* kaonTrack = picoDst->track(kaonIndices[iK]);
+    if (!kaonTrack) continue;
 
-        for (unsigned int iPi = 0; iPi < pionIndices.size(); ++iPi) {
-            if (kaonIndices[iK] == pionIndices[iPi]) continue;
+    for (unsigned int iPi = 0; iPi < pionIndices.size(); ++iPi) {
+      if (kaonIndices[iK] == pionIndices[iPi]) continue;
 
-            StPicoTrack const* pionTrack = picoDst->track(pionIndices[iPi]);
-            if (!pionTrack) continue;
+      StPicoTrack const* pionTrack = picoDst->track(pionIndices[iPi]);
+      if (!pionTrack) continue;
 
-            StKaonPion kaonPion(*kaonTrack, *pionTrack, pVtx, bField);
+      StKaonPion kaonPion(*kaonTrack, *pionTrack, pVtx, bField);
 
-            if ((kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
-                (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
-                (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) &&
-                (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
-                (kaonPion.pionDca() > D0_Cuts::DCA_pi))
-            {
-                int k_charge = kaonTrack->charge();
-                int pi_charge = pionTrack->charge();
+      if ((kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
+          (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
+          (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) &&
+          (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
+          (kaonPion.pionDca() > D0_Cuts::DCA_pi))
+      {
+        int k_charge = kaonTrack->charge();
+        int pi_charge = pionTrack->charge();
 
-                // Unlike-Sign: K- pi+
-                if (k_charge < 0 && pi_charge > 0) {
-                    hMpik_ULike1->Fill(kaonPion.m());
-                }
-                // Unlike-Sign: K+ pi-
-                else if (k_charge > 0 && pi_charge < 0) {
-                    hMpik_ULike2->Fill(kaonPion.m());
-                }
-                // Like-Sign: K+ pi+
-                else if (k_charge > 0 && pi_charge > 0) {
-                    hMpik_Like1->Fill(kaonPion.m());
-                }
-                // Like-Sign: K- pi-
-                else if (k_charge < 0 && pi_charge < 0) {
-                    hMpik_Like2->Fill(kaonPion.m());
-                }
-            }
+        // Unlike-Sign: K- pi+
+        if (k_charge < 0 && pi_charge > 0) {
+          hMpik_ULike1->Fill(kaonPion.m());
         }
+        // Unlike-Sign: K+ pi-
+        else if (k_charge > 0 && pi_charge < 0) {
+          hMpik_ULike2->Fill(kaonPion.m());
+        }
+        // Like-Sign: K+ pi+
+        else if (k_charge > 0 && pi_charge > 0) {
+          hMpik_Like1->Fill(kaonPion.m());
+        }
+        // Like-Sign: K- pi-
+        else if (k_charge < 0 && pi_charge < 0) {
+          hMpik_Like2->Fill(kaonPion.m());
+        }
+      }
     }
+  }
 }
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{
@@ -389,6 +391,31 @@ double StMyHFMaker::getTofBeta(StPicoTrack const* const trk) const
   return beta;
 }
 //______________________________________________________________
+float StMyHFMaker::calcEventPlane(StPicoDst const* const picoDst, StPicoEvent const* picoEvent, const int n) const
+{
+	float cossum_nocorrection = 0.;
+	float sinsum_nocorrection = 0.;
+	TVector3 pVtx = picoEvent->primaryVertex();
+	const int nTrack = picoDst->numberOfTracks();
+	for (int iTrack = 0; iTrack < nTrack; iTrack++) {
+		StPicoTrack* mTrack = (StPicoTrack*)picoDst->track(iTrack);
+		if (!mTrack) continue;
+		float dca = mTrack->gDCA(pVtx.x(), pVtx.y(), pVtx.z());
+    if(!isGoodTrack(mTrack,dca))continue;
+		const int nHitsFit = (int)fabs(mTrack->nHitsFit());
+		const float pt = mTrack->pMom().Perp();
+		const float phi = mTrack->pMom().Phi();
+		const float cos_part_nocorrection = pt * cos(n*phi);
+		const float sin_part_nocorrection = pt * sin(n*phi);
+		cossum_nocorrection += cos_part_nocorrection;
+		sinsum_nocorrection += sin_part_nocorrection;
+	}
+	TVector2 Q_nocorrection(cossum_nocorrection, sinsum_nocorrection);
+	float eventPlane_nocorrection = Q_nocorrection.Phi();
+	if (eventPlane_nocorrection < 0) eventPlane_nocorrection += 2.0*TMath::Pi();
+	return eventPlane_nocorrection / n;
+}
+//______________________________________________________________
 void StMyHFMaker::initHistograms(){
   
   int nRuns = getTotalNRuns();
@@ -396,6 +423,7 @@ void StMyHFMaker::initHistograms(){
   hNevent = new TH1D("hNevnet","Number of Events",nRuns,0,nRuns);                      //TODO: Declare the limits of 
   hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",200,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//the histograms for better 
   hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",200,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//readability 
+  hEventPlane = new TH1D("hEventPlane", "hEventPlane", 200, -0.1, 3.3);
   hVr = new TH1D("hVr","V_{r}",200,0,EventCuts::vR+1);
   hNsigmaElectron = new TH1D("hNsigmaElectron", "n^{#sigma}_{e}",100,-5,5);
   hMee_ULike = new TH1D("hMee_ULike","e^{+} e^{-} + Background",xBins,0,4);
@@ -410,6 +438,7 @@ void StMyHFMaker::initHistograms(){
 void StMyHFMaker::writeHistograms(){
   hNevent->Write();
   hVzTPC->Write();
+  hEventPlane->Write();
   hVzVPD->Write();
   hVr->Write();
   hNsigmaElectron->Write();
@@ -425,6 +454,7 @@ void StMyHFMaker::writeHistograms(){
 void StMyHFMaker::deleteHistograms(){
   delete hNevent;
   delete hVzTPC;
+  delete hEventPlane;
   delete hVzVPD;
   delete hVr;
   delete hNsigmaElectron;
