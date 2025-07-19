@@ -167,6 +167,7 @@ bool StMyHFMaker::isPion(StPicoTrack const* trk, bool tofMatch, float beta, floa
   if(tofMatch)
   {
     float p = trk->gMom().Mag();
+    if (p < 1.e-9) return false;
     float pion_beta_expected = p / sqrt(p * p + M_PION * M_PION);
     return std::abs(1. / beta - 1. / pion_beta_expected) < D0_Cuts::oneOverBetaPion &&
             DCA > D0_Cuts::DCA_pi;
@@ -181,6 +182,7 @@ bool StMyHFMaker::isKaon(StPicoTrack const* trk, bool tofMatch, float beta, floa
   if(tofMatch)
   {
     float p = trk->gMom().Mag();
+    if (p < 1.e-9) return false;
     float kaon_beta_expected = p / sqrt(p * p + M_KAON * M_KAON);
     return std::abs(1. / beta - 1. / kaon_beta_expected) < D0_Cuts::oneOverBetaKaon &&
             DCA > D0_Cuts::DCA_k;
