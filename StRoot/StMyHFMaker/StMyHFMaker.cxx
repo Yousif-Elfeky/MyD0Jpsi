@@ -31,6 +31,8 @@
 #include "StPicoEvent/StPicoBEmcPidTraits.h"
 #include "StPicoEvent/StPicoMtdPidTraits.h"
 #include "StMemStat.h"
+#include "StRefMultCorr/StRefMultCorr.h"
+#include "StRefMultCorr/CentralityMaker.h"
 
 #include "StMyCuts.h"
 #include "StMyHFMaker.h"
@@ -113,11 +115,20 @@ Int_t StMyHFMaker::Make()
   VPDvz = picoEvent->vzVpd();hVzVPD->Fill(VPDvz);
   Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
 
-  mCentralityBin = getCentralityBin(picoEvent->grefMult());
-    if (mCentralityBin < 0) {
-      return kStOK;
+  //mCentralityBin = getCentralityBin(picoEvent->grefMult());
+  StRefMultCorr* refmultCorrUtil = CentralityMaker::instance()->getRefMultCorr();
+  if (!refmultCorrUtil) {
+    LOG_WARN << "StMyHFMaker::Make() - CentralityMaker returned a null StRefMultCorr pointer! Skipping event." << endm;
+    return kStWarn;
   }
-
+  refmultCorrUtil->init(mRunId);
+  if (refmultCorrUtil->isBadRun(mRunId)) {
+    return kStOK;
+  }
+  refmultCorrUtil->initEvent(picoEvent->grefMult(), vz, picoEvent->ZDCx());
+  mCentralityBin = refmultCorrUtil->getCentralityBin9();
+  if (mCentralityBin < 0) return kStOK;
+ 
   nTracks = picoDst->numberOfTracks();
   std::vector<unsigned int> idxPicoPions;
   std::vector<unsigned int> idxPicoKaons;
