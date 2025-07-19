@@ -118,13 +118,14 @@ Int_t StMyHFMaker::Make()
   for (UInt_t itrack=0;itrack<nTracks;itrack++){
     StPicoTrack* trk = picoDst->track(itrack);
     mom = trk->pMom();
-    if(!isGoodTrack(trk,trk->gDCA(TPCVer.x(),TPCVer.y(),TPCVer.z())))continue;
+    dca_to_pv = trk->gDCA(TPCVer.x(), TPCVer.y(), TPCVer.z());
+    if(!isGoodTrack(trk,dca_to_pv))continue;
     
     beta = getTofBeta(trk);
     tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
-    dca_to_pv = trk->gDCA(TPCVer.x(), TPCVer.y(), TPCVer.z());
+    
 
-    if(isElectron(trk,tofmatch,beta)){
+    if(isElectron(trk,tofmatch,beta,dca_to_pv)){
       hNsigmaElectron->Fill(trk->nSigmaElectron());
       pairElectrons(trk);
     }
@@ -141,7 +142,7 @@ Int_t StMyHFMaker::Make()
   return kStOK;
 }
 //______________________________________________________________
-bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta) const {
+bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta, float DCA) const {
     bool isTPCElectron = false;
     if (trk->pMom().Mag() < 0.8) {
         isTPCElectron = trk->nSigmaElectron() < JPSI_Cuts::nSigmaElectron_max &&
@@ -153,7 +154,7 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta) 
 
     bool isTOFElectron = tofMatch ? std::abs(1. / beta - 1.) < JPSI_Cuts::oneOverBetaElectron : false;
 
-    return isTPCElectron || isTOFElectron;
+    return (isTPCElectron || isTOFElectron) && DCA > 1.0;
 }
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk, bool tofMatch, float beta) const {
@@ -224,77 +225,41 @@ void StMyHFMaker::pairKaons(StPicoTrack const* trk){
 }
 //______________________________________________________________
 void StMyHFMaker::makeJPSI(){
-  uint electron_idx = 0; uint positron_idx = 0;
-  uint nElectron = electroninfo.size(); uint nPositron = positroninfo.size();
-  TLorentzVector pair(0,0,0,0);
-  TLorentzVector particle1_4V(0,0,0,0);
-  TLorentzVector particle2_4V(0,0,0,0);
-  //Like-Sign Background Positron Pairs.
-  for(electron_idx=0;electron_idx<nPositron;electron_idx++)
+
+  TLorentzVector pair_4v(0,0,0,0), p1_4v(0,0,0,0), p2_4v(0,0,0,0);
+
+  // 1. Unlike-Sign Signal Pairs (e+ e-)
+  for(const auto& electron : electroninfo) 
   {
-    particle1_4V.SetPxPyPzE(
-      positroninfo[electron_idx].px,
-      positroninfo[electron_idx].py,
-      positroninfo[electron_idx].pz,
-      positroninfo[electron_idx].Energy
-    );
-    for(positron_idx=electron_idx+1;positron_idx<nPositron;positron_idx++)
+    p1_4v.SetPxPyPzE(electron.px, electron.py, electron.pz, electron.Energy);
+    for(const auto& positron : positroninfo) 
     {
-      particle2_4V.SetPxPyPzE(
-      positroninfo[positron_idx].px,
-      positroninfo[positron_idx].py,
-      positroninfo[positron_idx].pz,
-      positroninfo[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_Like1->Fill(pair.M());
+      p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_ULike->Fill(pair_4v.M());
     }
   }
-  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
-  //Like-Sign Background Electron Pairs.
-  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
+
+  // 2. Like-Sign Background: Positron Pairs (e+ e+)
+  for(uint i = 0; i < positroninfo.size(); ++i) 
   {
-    particle1_4V.SetPxPyPzE(
-      electroninfo[electron_idx].px,
-      electroninfo[electron_idx].py,
-      electroninfo[electron_idx].pz,
-      electroninfo[electron_idx].Energy
-    );
-    for(positron_idx=electron_idx+1;positron_idx<nElectron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      electroninfo[positron_idx].px,
-      electroninfo[positron_idx].py,
-      electroninfo[positron_idx].pz,
-      electroninfo[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_Like2->Fill(pair.M());
+    p1_4v.SetPxPyPzE(positroninfo[i].px, positroninfo[i].py, positroninfo[i].pz, positroninfo[i].Energy);
+    for(uint j = i + 1; j < positroninfo.size(); ++j) 
+    { 
+      p2_4v.SetPxPyPzE(positroninfo[j].px, positroninfo[j].py, positroninfo[j].pz, positroninfo[j].Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_Like1->Fill(pair_4v.M());
     }
   }
-  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
-  //Unlike-Sign Signal Pairs.
-  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
-  {
-    particle1_4V.SetPxPyPzE(
-      electroninfo[electron_idx].px,
-      electroninfo[electron_idx].py,
-      electroninfo[electron_idx].pz,
-      electroninfo[electron_idx].Energy
-    );
-    for(positron_idx=0;positron_idx<nPositron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      positroninfo[positron_idx].px,
-      positroninfo[positron_idx].py,
-      positroninfo[positron_idx].pz,
-      positroninfo[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_ULike->Fill(pair.M());
+
+  // 3. Like-Sign Background: Electron Pairs (e- e-)
+  for(uint i = 0; i < electroninfo.size(); ++i) {
+    p1_4v.SetPxPyPzE(electroninfo[i].px, electroninfo[i].py, electroninfo[i].pz, electroninfo[i].Energy);
+    for(uint j = i + 1; j < electroninfo.size(); ++j) 
+    { 
+      p2_4v.SetPxPyPzE(electroninfo[j].px, electroninfo[j].py, electroninfo[j].pz, electroninfo[j].Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_Like2->Fill(pair_4v.M());
     }
   }
 }
@@ -428,18 +393,18 @@ void StMyHFMaker::initHistograms(){
   
   int nRuns = getTotalNRuns();
 
-  hNevent = new TH1D("hNevnet","Number of Events",nRuns,0,nRuns);                        //TODO: Declare the limits of 
-  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//the histograms for better 
-  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",xBins,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//readability 
-  hVr = new TH1D("hVr","V_{r}",xBins,0,EventCuts::vR+2);
+  hNevent = new TH1D("hNevnet","Number of Events",nRuns,0,nRuns);                      //TODO: Declare the limits of 
+  hVzTPC = new TH1D("hVzTPC","TPC_{Vz}",200,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//the histograms for better 
+  hVzVPD = new TH1D("hVzVPD","VPD_{Vz}",200,EventCuts::vZ_min-20,EventCuts::vZ_max+20);//readability 
+  hVr = new TH1D("hVr","V_{r}",200,0,EventCuts::vR+1);
   hNsigmaElectron = new TH1D("hNsigmaElectron", "n^{#sigma}_{e}",100,-5,5);
   hMee_ULike = new TH1D("hMee_ULike","e^{+} e^{-} + Background",xBins,0,4);
   hMee_Like1 = new TH1D("hMee_Like1","e^{+} e^{+}",xBins,0,4);
   hMee_Like2 = new TH1D("hMee_Like2","e^{-} e^{-}",xBins,0,4);
-  hMpik_ULike1 = new TH1D("hMpik_ULike1","K^{-} #pi^{+}",xBins,0,2);
-  hMpik_ULike2 = new TH1D("hMpik_ULike2","K^{+} #pi^{-}",xBins,0,2);
-  hMpik_Like1 = new TH1D("hMpik_Like1","K^{+} #pi^{+}",xBins,0,2);
-  hMpik_Like2 = new TH1D("hMpik_Like2","K^{-} #pi^{-}",xBins,0,2);
+  hMpik_ULike1 = new TH1D("hMpik_ULike1","K^{-} #pi^{+}",xBins,0,3);
+  hMpik_ULike2 = new TH1D("hMpik_ULike2","K^{+} #pi^{-}",xBins,0,3);
+  hMpik_Like1 = new TH1D("hMpik_Like1","K^{+} #pi^{+}",xBins,0,3);
+  hMpik_Like2 = new TH1D("hMpik_Like2","K^{-} #pi^{-}",xBins,0,3);
 }
 //______________________________________________________________
 void StMyHFMaker::writeHistograms(){

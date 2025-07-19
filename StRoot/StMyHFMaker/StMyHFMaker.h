@@ -68,7 +68,7 @@ class StMyHFMaker : public StMaker
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
         bool isGoodTrack(StPicoTrack const* trk, float DCA)const;
-        bool isElectron(StPicoTrack const* trk, bool tofMatch, float beta)const;
+        bool isElectron(StPicoTrack const* trk, bool tofMatch, float beta, float DCA)const;
         bool isPion(StPicoTrack const* trk, bool tofMatch, float beta)const;
         bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta)const;
         bool isBadrun(Int_t runId);
@@ -103,8 +103,8 @@ class StMyHFMaker : public StMaker
         TNtuple* mJPSI;
         
         // Histograms Here.
-        Int_t xBins = 10000;
-        Int_t yBins = 10000;
+        Int_t xBins = 40000;
+        Int_t yBins = 40000;
         TH1D* hNevent;
         TH1D* hVzTPC;
         TH1D* hVzVPD;
