@@ -121,7 +121,7 @@ Int_t StMyHFMaker::Make()
     StPicoTrack* trk = picoDst->track(itrack);
     mom = trk->pMom();
     dca_to_pv = trk->gDCA(TPCVer.x(), TPCVer.y(), TPCVer.z());
-    if(!isGoodTrack(trk,dca_to_pv))continue;
+    if(!isGoodTrack(trk))continue;
     
     beta = getTofBeta(trk);
     tofmatch = (beta!=std::numeric_limits<float>::quiet_NaN()) && beta>0;
@@ -130,11 +130,12 @@ Int_t StMyHFMaker::Make()
     if(isElectron(trk,tofmatch,beta,dca_to_pv)){
       hNsigmaElectron->Fill(trk->nSigmaElectron());
       pairElectrons(trk);
+      
     }
-    if(isPion(trk,tofmatch,beta)){
+    if(isPion(trk,tofmatch,beta,dca_to_pv)){
       idxPicoPions.push_back(itrack);
     }
-    if(isKaon(trk,tofmatch,beta)){
+    if(isKaon(trk,tofmatch,beta,dca_to_pv)){
       idxPicoKaons.push_back(itrack);
     }
   }
@@ -156,33 +157,35 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta, 
 
     bool isTOFElectron = tofMatch ? std::abs(1. / beta - 1.) < JPSI_Cuts::oneOverBetaElectron : false;
 
-    return (isTPCElectron || isTOFElectron) && DCA > 0.0;
+    return (isTPCElectron || isTOFElectron) && DCA < 1.0;
 }
 //______________________________________________________________
-bool StMyHFMaker::isPion(StPicoTrack const* trk, bool tofMatch, float beta) const {
+bool StMyHFMaker::isPion(StPicoTrack const* trk, bool tofMatch, float beta, float DCA) const {
     bool tpcPion = std::abs(trk->nSigmaPion()) < D0_Cuts::nSigmaPion;
     if (!tpcPion) return false;
 
     if (tofMatch) {
         float p = trk->gMom().Mag();
         float pion_beta_expected = p / sqrt(p * p + M_PION * M_PION);
-        return std::abs(1. / beta - 1. / pion_beta_expected) < D0_Cuts::oneOverBetaPion;
+        return std::abs(1. / beta - 1. / pion_beta_expected) < D0_Cuts::oneOverBetaPion &&
+               DCA > D0_Cuts::DCA_pi;
     }
 
-    return true;
+    return true && DCA > D0_Cuts::DCA_pi;
 }
 //______________________________________________________________
-bool StMyHFMaker::isKaon(StPicoTrack const* trk, bool tofMatch, float beta) const {
+bool StMyHFMaker::isKaon(StPicoTrack const* trk, bool tofMatch, float beta, float DCA) const {
     bool tpcKaon = std::abs(trk->nSigmaKaon()) < D0_Cuts::nSigmaKaon;
     if (!tpcKaon) return false;
 
     if (tofMatch) {
         float p = trk->gMom().Mag();
         float kaon_beta_expected = p / sqrt(p * p + M_KAON * M_KAON);
-        return std::abs(1. / beta - 1. / kaon_beta_expected) < D0_Cuts::oneOverBetaKaon;
+        return std::abs(1. / beta - 1. / kaon_beta_expected) < D0_Cuts::oneOverBetaKaon &&
+               DCA > D0_Cuts::DCA_k;
     }
 
-    return true;
+    return true && DCA > D0_Cuts::DCA_k;
 }//______________________________________________________________
 void StMyHFMaker::pairElectrons(StPicoTrack const* trk){
   particleinfo.charge = trk->charge();
@@ -227,77 +230,41 @@ void StMyHFMaker::pairKaons(StPicoTrack const* trk){
 }
 //______________________________________________________________
 void StMyHFMaker::makeJPSI(){
-  uint electron_idx = 0; uint positron_idx = 0;
-  uint nElectron = electroninfo.size(); uint nPositron = positroninfo.size();
-  TLorentzVector pair(0,0,0,0);
-  TLorentzVector particle1_4V(0,0,0,0);
-  TLorentzVector particle2_4V(0,0,0,0);
-  //Like-Sign Background Positron Pairs.
-  for(electron_idx=0;electron_idx<nPositron;electron_idx++)
+
+  TLorentzVector pair_4v(0,0,0,0), p1_4v(0,0,0,0), p2_4v(0,0,0,0);
+
+  // 1. Unlike-Sign Signal Pairs (e+ e-)
+  for(const auto& electron : electroninfo) 
   {
-    particle1_4V.SetPxPyPzE(
-      positroninfo[electron_idx].px,
-      positroninfo[electron_idx].py,
-      positroninfo[electron_idx].pz,
-      positroninfo[electron_idx].Energy
-    );
-    for(positron_idx=electron_idx+1;positron_idx<nPositron;positron_idx++)
+    p1_4v.SetPxPyPzE(electron.px, electron.py, electron.pz, electron.Energy);
+    for(const auto& positron : positroninfo) 
     {
-      particle2_4V.SetPxPyPzE(
-      positroninfo[positron_idx].px,
-      positroninfo[positron_idx].py,
-      positroninfo[positron_idx].pz,
-      positroninfo[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_Like1->Fill(pair.M());
+      p2_4v.SetPxPyPzE(positron.px, positron.py, positron.pz, positron.Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_ULike->Fill(pair_4v.M());
     }
   }
-  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
-  //Like-Sign Background Electron Pairs.
-  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
+
+  // 2. Like-Sign Background: Positron Pairs (e+ e+)
+  for(uint i = 0; i < positroninfo.size(); ++i) 
   {
-    particle1_4V.SetPxPyPzE(
-      electroninfo[electron_idx].px,
-      electroninfo[electron_idx].py,
-      electroninfo[electron_idx].pz,
-      electroninfo[electron_idx].Energy
-    );
-    for(positron_idx=electron_idx+1;positron_idx<nElectron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      electroninfo[positron_idx].px,
-      electroninfo[positron_idx].py,
-      electroninfo[positron_idx].pz,
-      electroninfo[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_Like2->Fill(pair.M());
+    p1_4v.SetPxPyPzE(positroninfo[i].px, positroninfo[i].py, positroninfo[i].pz, positroninfo[i].Energy);
+    for(uint j = i + 1; j < positroninfo.size(); ++j) 
+    { 
+      p2_4v.SetPxPyPzE(positroninfo[j].px, positroninfo[j].py, positroninfo[j].pz, positroninfo[j].Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_Like1->Fill(pair_4v.M());
     }
   }
-  pair.Clear();particle1_4V.Clear();particle2_4V.Clear();
-  //Unlike-Sign Signal Pairs.
-  for(electron_idx=0;electron_idx<nElectron;electron_idx++)
-  {
-    particle1_4V.SetPxPyPzE(
-      electroninfo[electron_idx].px,
-      electroninfo[electron_idx].py,
-      electroninfo[electron_idx].pz,
-      electroninfo[electron_idx].Energy
-    );
-    for(positron_idx=0;positron_idx<nPositron;positron_idx++)
-    {
-      particle2_4V.SetPxPyPzE(
-      positroninfo[positron_idx].px,
-      positroninfo[positron_idx].py,
-      positroninfo[positron_idx].pz,
-      positroninfo[positron_idx].Energy
-    );
-    pair=particle1_4V+particle2_4V;
-    //Fill Histograms and trees here
-    hMee_ULike->Fill(pair.M());
+
+  // 3. Like-Sign Background: Electron Pairs (e- e-)
+  for(uint i = 0; i < electroninfo.size(); ++i) {
+    p1_4v.SetPxPyPzE(electroninfo[i].px, electroninfo[i].py, electroninfo[i].pz, electroninfo[i].Energy);
+    for(uint j = i + 1; j < electroninfo.size(); ++j) 
+    { 
+      p2_4v.SetPxPyPzE(electroninfo[j].px, electroninfo[j].py, electroninfo[j].pz, electroninfo[j].Energy);
+      pair_4v = p1_4v + p2_4v;
+      hMee_Like2->Fill(pair_4v.M());
     }
   }
 }
@@ -368,14 +335,13 @@ bool StMyHFMaker::isGoodTrigger(StPicoEvent const* const picoEvent)const{
   return false;
 }//Check StMyCuts.h
 //______________________________________________________________
-bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk, float DCA)const{
+bool StMyHFMaker::isGoodTrack(StPicoTrack const* trk)const{
   return ((trk->gPt() > TrackCuts::gPt)&&
           ((trk->gMom().Eta()) < TrackCuts::Eta)&&
           (trk->nHitsFit() > TrackCuts::nHitsFit)&&
           (trk->nHitsDedx() > TrackCuts::nHitsDedx)&&
           (((trk->nHitsFit())/(trk->nHitsDedx())) >= 
-              TrackCuts::nHitsFit2Dedx) &&
-          (DCA > TrackCuts::DCA)
+              TrackCuts::nHitsFit2Dedx)
       );
 }//Check StMyCuts.h
 //______________________________________________________________
@@ -437,7 +403,7 @@ float StMyHFMaker::calcEventPlane(StPicoDst const* const picoDst, StPicoEvent co
 		StPicoTrack* mTrack = (StPicoTrack*)picoDst->track(iTrack);
 		if (!mTrack) continue;
 		float dca = mTrack->gDCA(pVtx.x(), pVtx.y(), pVtx.z());
-    if(!isGoodTrack(mTrack,dca))continue;
+    if(!isGoodTrack(mTrack))continue;
 		const float pt = mTrack->pMom().Perp();
 		const float phi = mTrack->pMom().Phi();
 		const float cos_part_nocorrection = pt * cos(n*phi);

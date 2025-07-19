@@ -67,10 +67,10 @@ class StMyHFMaker : public StMaker
         double getTofBeta(StPicoTrack const* const trk) const;
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
         bool isGoodTrigger(StPicoEvent const* const picoEvent)const;
-        bool isGoodTrack(StPicoTrack const* trk, float DCA)const;
+        bool isGoodTrack(StPicoTrack const* trk)const;
         bool isElectron(StPicoTrack const* trk, bool tofMatch, float beta, float DCA)const;
-        bool isPion(StPicoTrack const* trk, bool tofMatch, float beta)const;
-        bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta)const;
+        bool isPion(StPicoTrack const* trk, bool tofMatch, float beta, float DCA)const;
+        bool isKaon(StPicoTrack const* trk, bool tofMatch, float beta, float DCA)const;
         bool isBadrun(Int_t runId);
         float calcEventPlane(StPicoDst const* const picoDst, StPicoEvent const* picoEvent, const int n) const;
         
