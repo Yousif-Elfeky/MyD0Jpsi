@@ -237,7 +237,6 @@ void StMyHFMaker::makeJPSI(){
       hMee_ULike->Fill(pair_4v.M());
     }
   }
-  pair_4v.SetPxPyPzE(0,0,0,0), p1_4v.SetPxPyPzE(0,0,0,0), p2_4v.SetPxPyPzE(0,0,0,0);
   // 2. Like-Sign Background: Positron Pairs (e+ e+)
   for(uint i = 0; i < positroninfo.size(); ++i) 
   {
@@ -249,7 +248,6 @@ void StMyHFMaker::makeJPSI(){
       hMee_Like1->Fill(pair_4v.M());
     }
   }
-  pair_4v.SetPxPyPzE(0,0,0,0), p1_4v.SetPxPyPzE(0,0,0,0), p2_4v.SetPxPyPzE(0,0,0,0);
   // 3. Like-Sign Background: Electron Pairs (e- e-)
   for(uint i = 0; i < electroninfo.size(); ++i) {
     p1_4v.SetPxPyPzE(electroninfo[i].px, electroninfo[i].py, electroninfo[i].pz, electroninfo[i].Energy);
