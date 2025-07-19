@@ -11,12 +11,12 @@ namespace EventCuts{
     std::array<unsigned int, 3> const triggers = {1,2,3}; //PlaceHolder Triggers
 }//EventCuts
 namespace TrackCuts{
-    const float gPt = 0.5; // Global pT > 0.5
+    const float gPt = 0.2; // Global pT > 0.5
     const int nHitsFit = 20;  // nHitsFit > 15
     const int nHitsDedx = 5; // nHitsDedx > 5
     const float nHitsFit2Dedx = 0.51; // ((nHitsFit)/(nHitsDedx)) >= 0.51
     const float DCA = 0.005; // DCA > 0.005 cm
-    const int Eta = 1; // |η| < 1
+    const int Eta = 1.5; // |η| < 1
 }//TrackCuts
 namespace D0_Cuts{
     int nSigmaPion = 2;
