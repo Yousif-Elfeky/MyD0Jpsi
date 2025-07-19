@@ -147,7 +147,7 @@ Int_t StMyHFMaker::Make()
 //______________________________________________________________
 bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta, float DCA) const {
     bool isTPCElectron = false;
-    if (trk->pMom().Mag() > 0.8) {
+    if (trk->pMom().Mag() < 0.8) {
         isTPCElectron = trk->nSigmaElectron() < JPSI_Cuts::nSigmaElectron_max &&
                         trk->nSigmaElectron() > JPSI_Cuts::nSigmaElectron_min;
     } else {
