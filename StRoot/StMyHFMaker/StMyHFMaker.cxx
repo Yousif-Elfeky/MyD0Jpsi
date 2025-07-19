@@ -438,7 +438,6 @@ float StMyHFMaker::calcEventPlane(StPicoDst const* const picoDst, StPicoEvent co
 		if (!mTrack) continue;
 		float dca = mTrack->gDCA(pVtx.x(), pVtx.y(), pVtx.z());
     if(!isGoodTrack(mTrack,dca))continue;
-		const int nHitsFit = (int)fabs(mTrack->nHitsFit());
 		const float pt = mTrack->pMom().Perp();
 		const float phi = mTrack->pMom().Phi();
 		const float cos_part_nocorrection = pt * cos(n*phi);
