@@ -112,6 +112,8 @@ Int_t StMyHFMaker::Make()
   Vr = std::sqrt(TMath::Power(TPCVer.x(),2)+TMath::Power(TPCVer.y(),2));hVr->Fill(Vr);
 
   nTracks = picoDst->numberOfTracks();
+  std::vector<unsigned int> idxPicoPions;
+  std::vector<unsigned int> idxPicoKaons;
   // Track Loop
   for (UInt_t itrack=0;itrack<nTracks;itrack++){
     StPicoTrack* trk = picoDst->track(itrack);
@@ -127,16 +129,14 @@ Int_t StMyHFMaker::Make()
       pairElectrons(trk);
     }
     if(isPion(trk,tofmatch,beta)){
-      if (std::abs(dca_to_pv) > D0_Cuts::DCA_pi) //IMPORTANT
-      pairPions(trk);
+      idxPicoPions.push_back(itrack);
     }
     if(isKaon(trk,tofmatch,beta)){
-      if (std::abs(dca_to_pv) > D0_Cuts::DCA_k) //IMPORTANT
-      pairKaons(trk);
+      idxPicoKaons.push_back(itrack);
     }
   }
   makeJPSI();
-  makeD0();
+  makeD0(picoDst,TPCVer,idxPicoKaons,idxPicoPions);
 
   return kStOK;
 }
@@ -263,93 +263,52 @@ void StMyHFMaker::makeJPSI(){
   }
 }
 //______________________________________________________________
-void StMyHFMaker::makeD0(){
+void StMyHFMaker::makeD0(StPicoDst const* picoDst, TVector3 const& pVtx,
+                         std::vector<unsigned int> const& kaonIndices,
+                         std::vector<unsigned int> const& pionIndices) {
 
-  StPicoDst const* picoDst = mPicoDstMaker->picoDst();
-  TVector3 primaryVertex = picoDst->event()->primaryVertex();
-  float bField = picoDst->event()->bField();
+    float const bField = picoDst->event()->bField();
 
-  TLorentzVector d0FourMom(0,0,0,0),kaon4V(0,0,0,0),pion4V(0,0,0,0);
-  // Unlike-Sign (K- pi+)
-  for(const auto& kaon : kaonminusinfo) {    
-    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
-    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-    for(const auto& pion : pionplusinfo) {
-      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
-      if (!pionTrack || pion.trackId == kaon.trackId) continue;
-      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
-      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
-      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
-      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
-      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
-      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
-      {
-        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-        d0FourMom = kaon4V + pion4V;
-        hMpik_ULike1->Fill(d0FourMom.M());
-      }
+    for (unsigned int iK = 0; iK < kaonIndices.size(); ++iK) {
+        StPicoTrack const* kaonTrack = picoDst->track(kaonIndices[iK]);
+        if (!kaonTrack) continue;
+
+        for (unsigned int iPi = 0; iPi < pionIndices.size(); ++iPi) {
+            if (kaonIndices[iK] == pionIndices[iPi]) continue;
+
+            StPicoTrack const* pionTrack = picoDst->track(pionIndices[iPi]);
+            if (!pionTrack) continue;
+
+            StKaonPion kaonPion(*kaonTrack, *pionTrack, pVtx, bField);
+
+            if ((kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
+                (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
+                (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) &&
+                (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
+                (kaonPion.pionDca() > D0_Cuts::DCA_pi))
+            {
+                int k_charge = kaonTrack->charge();
+                int pi_charge = pionTrack->charge();
+
+                // Unlike-Sign: K- pi+
+                if (k_charge < 0 && pi_charge > 0) {
+                    hMpik_ULike1->Fill(kaonPion.m());
+                }
+                // Unlike-Sign: K+ pi-
+                else if (k_charge > 0 && pi_charge < 0) {
+                    hMpik_ULike2->Fill(kaonPion.m());
+                }
+                // Like-Sign: K+ pi+
+                else if (k_charge > 0 && pi_charge > 0) {
+                    hMpik_Like1->Fill(kaonPion.m());
+                }
+                // Like-Sign: K- pi-
+                else if (k_charge < 0 && pi_charge < 0) {
+                    hMpik_Like2->Fill(kaonPion.m());
+                }
+            }
+        }
     }
-  }
-  // Unlike-Sign (K+ pi-)
-  for(const auto& kaon : kaonplusinfo) {
-    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
-    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-    for(const auto& pion : pionminusinfo) {
-      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
-      if (!pionTrack || pion.trackId == kaon.trackId) continue;
-      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
-      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
-      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
-      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
-      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
-      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
-      {
-        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-        d0FourMom = kaon4V + pion4V;
-        hMpik_ULike2->Fill(d0FourMom.M());
-      }
-    }
-  }
-  // Like-Sign (K+ pi+)
-  for(const auto& kaon : kaonplusinfo) {
-    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
-    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-    for(const auto& pion : pionplusinfo) {
-      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
-      if (!pionTrack || pion.trackId == kaon.trackId) continue;
-      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
-      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
-      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
-      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
-      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
-      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
-      {
-        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-        d0FourMom = kaon4V + pion4V;
-        hMpik_Like1->Fill(d0FourMom.M());
-      }
-    }
-  }
-  // Like-Sign (K- pi-)
-  for(const auto& kaon : kaonminusinfo) {
-    StPicoTrack* kaonTrack = picoDst->track(kaon.trackId);if (!kaonTrack) continue;
-    kaon4V.SetPxPyPzE(kaon.px, kaon.py, kaon.pz, kaon.Energy);
-    for(const auto& pion : pionminusinfo) {
-      StPicoTrack* pionTrack = picoDst->track(pion.trackId);
-      if (!pionTrack || pion.trackId == kaon.trackId) continue;
-      StKaonPion kaonPion(*kaonTrack, *pionTrack, primaryVertex, bField);
-      if ( (kaonPion.dcaDaughters() < D0_Cuts::DCA_12) &&
-      (kaonPion.decayLength() > D0_Cuts::DecayLength) &&
-      (cos(kaonPion.pointingAngle()) > D0_Cuts::cos_theta) && // Use cos() on the angle
-      (kaonPion.kaonDca() > D0_Cuts::DCA_k) &&
-      (kaonPion.pionDca() > D0_Cuts::DCA_pi) )
-      {
-        pion4V.SetPxPyPzE(pion.px, pion.py, pion.pz, pion.Energy);
-        d0FourMom = kaon4V + pion4V;
-        hMpik_Like2->Fill(d0FourMom.M());
-      }
-    }
-  }
 }
 //______________________________________________________________
 bool StMyHFMaker::isGoodEvent(StPicoEvent const* const picoEvent)const{

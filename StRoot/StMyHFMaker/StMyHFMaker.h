@@ -59,7 +59,9 @@ class StMyHFMaker : public StMaker
         void pairPions(StPicoTrack const* trk);
         void pairKaons(StPicoTrack const* trk);
         void makeJPSI();
-        void makeD0();
+        void makeD0(StPicoDst const* picoDst, TVector3 const& pVtx,
+                         std::vector<unsigned int> const& kaonIndices,
+                         std::vector<unsigned int> const& pionIndices);
         int getTotalNRuns();
         double getTofBeta(StPicoTrack const* const trk) const;
         bool isGoodEvent(StPicoEvent const* const picoEvent)const;
