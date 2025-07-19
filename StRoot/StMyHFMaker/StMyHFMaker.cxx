@@ -157,27 +157,35 @@ bool StMyHFMaker::isElectron(StPicoTrack const* trk, bool tofMatch, float beta, 
 
     bool isTOFElectron = tofMatch ? std::abs(1. / beta - 1.) < JPSI_Cuts::oneOverBetaElectron : false;
 
-    return (isTPCElectron || isTOFElectron) && DCA < 3.0;
+    return isTPCElectron && isTOFElectron && DCA < 3.0;
 }
 //______________________________________________________________
 bool StMyHFMaker::isPion(StPicoTrack const* trk, bool tofMatch, float beta, float DCA) const {
-
+  
   bool tpcPion = std::abs(trk->nSigmaPion()) < D0_Cuts::nSigmaPion;
   if (!tpcPion) return false;
-  float p = trk->gMom().Mag();
-  float pion_beta_expected = p / sqrt(p * p + M_PION * M_PION);
-  return std::abs(1. / beta - 1. / pion_beta_expected) < D0_Cuts::oneOverBetaPion &&
-          DCA > D0_Cuts::DCA_pi && tofMatch;
+  if(tofMatch)
+  {
+    float p = trk->gMom().Mag();
+    float pion_beta_expected = p / sqrt(p * p + M_PION * M_PION);
+    return std::abs(1. / beta - 1. / pion_beta_expected) < D0_Cuts::oneOverBetaPion &&
+            DCA > D0_Cuts::DCA_pi;
+  }
+  return tpcPion && tofMatch;
 }
 //______________________________________________________________
 bool StMyHFMaker::isKaon(StPicoTrack const* trk, bool tofMatch, float beta, float DCA) const {
   
   bool tpcKaon = std::abs(trk->nSigmaKaon()) < D0_Cuts::nSigmaKaon;
   if (!tpcKaon) return false;
-  float p = trk->gMom().Mag();
-  float kaon_beta_expected = p / sqrt(p * p + M_KAON * M_KAON);
-  return std::abs(1. / beta - 1. / kaon_beta_expected) < D0_Cuts::oneOverBetaKaon &&
-          DCA > D0_Cuts::DCA_k && tofMatch;
+  if(tofMatch)
+  {
+    float p = trk->gMom().Mag();
+    float kaon_beta_expected = p / sqrt(p * p + M_KAON * M_KAON);
+    return std::abs(1. / beta - 1. / kaon_beta_expected) < D0_Cuts::oneOverBetaKaon &&
+            DCA > D0_Cuts::DCA_k;
+  } 
+  return tpcKaon && tofMatch;
 }
 //______________________________________________________________
 void StMyHFMaker::pairElectrons(StPicoTrack const* trk){
